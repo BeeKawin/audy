@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../core/app_routes.dart';
 import '../core/audy_ui.dart';
+import '../core/audy_theme.dart';
 import '../state/audy_controller.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -12,33 +13,34 @@ class DashboardPage extends StatelessWidget {
     return AudyResponsivePage(
       builder: (context, adaptive) {
         final controller = AudyScope.of(context);
+        // Colorful, distinct cards for autism-friendly visual recognition
         final activities = [
           _NavCardData(
             title: 'Games',
-            subtitle: 'Short focus games',
-            icon: Icons.sports_esports_outlined,
-            color: const Color(0xFFF8C7DF),
+            subtitle: 'Fun learning games',
+            icon: Icons.sports_esports_rounded,
+            color: AudyColors.gamesEmotion,
             route: AppRoutes.games,
           ),
           _NavCardData(
-            title: 'Read & Pronounce',
-            subtitle: 'Speak with confidence',
+            title: 'Read & Speak',
+            subtitle: 'Practice reading aloud',
             icon: Icons.menu_book_rounded,
-            color: const Color(0xFFC9E8C1),
+            color: AudyColors.readingWords,
             route: AppRoutes.readingHub,
           ),
           _NavCardData(
-            title: 'Social Chat',
-            subtitle: 'Practice conversation',
-            icon: Icons.chat_bubble_outline_rounded,
-            color: const Color(0xFFDDD0F4),
+            title: 'Social Skills',
+            subtitle: 'Learn to chat',
+            icon: Icons.chat_bubble_rounded,
+            color: AudyColors.primaryLavender,
             route: AppRoutes.social,
           ),
           _NavCardData(
             title: 'Rewards',
-            subtitle: 'Celebrate progress',
-            icon: Icons.workspace_premium_outlined,
-            color: const Color(0xFFFFF1A8),
+            subtitle: 'See your stars!',
+            icon: Icons.workspace_premium_rounded,
+            color: AudyColors.rewardGold,
             route: AppRoutes.rewards,
           ),
         ];
@@ -117,13 +119,20 @@ class DashboardPage extends StatelessWidget {
             _HeroBanner(adaptive: adaptive),
             SizedBox(height: adaptive.space(28)),
             Center(
-              child: Text(
-                'CEDT INNOVATION SUMMIT 2026',
-                style: TextStyle(
-                  fontSize: adaptive.space(15),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  color: const Color(0xFF415674),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: adaptive.space(20),
+                  vertical: adaptive.space(12),
+                ),
+                decoration: BoxDecoration(
+                  color: AudyColors.primarySoftBlue.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AudySpacing.radiusCircular),
+                ),
+                child: Text(
+                  'Autism-Friendly Learning App',
+                  style: AudyTypography.labelMedium.copyWith(
+                    color: AudyColors.primarySoftBlue,
+                  ),
                 ),
               ),
             ),
@@ -673,3 +682,4 @@ class _PlanItem {
   final Color color;
   final String route;
 }
+

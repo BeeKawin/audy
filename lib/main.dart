@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'src/core/app_routes.dart';
+import 'src/core/audy_theme.dart';
 import 'src/features/dashboard_page.dart';
 import 'src/features/feature_pages.dart';
+import 'src/features/mini_puzzle_module.dart';
 import 'src/features/profile_and_rewards_pages.dart';
 import 'src/state/audy_controller.dart';
 
@@ -38,13 +40,74 @@ class _AudyAppState extends State<AudyApp> {
       controller: controller,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'AUDY',
+        title: 'AUDY - Autism-Friendly Learning',
         theme: ThemeData(
           useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFF4F8FC),
+          scaffoldBackgroundColor: AudyColors.backgroundCream,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF7A63C7),
+            seedColor: AudyColors.primarySoftBlue,
+            primary: AudyColors.primarySoftBlue,
+            secondary: AudyColors.primaryMint,
+            tertiary: AudyColors.accentSunny,
+            surface: AudyColors.backgroundLight,
             brightness: Brightness.light,
+          ),
+          // High contrast text theme for readability
+          textTheme: TextTheme(
+            displayLarge: AudyTypography.displayLarge,
+            displayMedium: AudyTypography.displayMedium,
+            headlineLarge: AudyTypography.headingLarge,
+            headlineMedium: AudyTypography.headingMedium,
+            headlineSmall: AudyTypography.headingSmall,
+            bodyLarge: AudyTypography.bodyLarge,
+            bodyMedium: AudyTypography.bodyMedium,
+            bodySmall: AudyTypography.bodySmall,
+            labelLarge: AudyTypography.labelLarge,
+            labelMedium: AudyTypography.labelMedium,
+          ),
+          // Large, friendly button theme
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(0, AudySpacing.buttonHeight),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AudySpacing.cardPadding,
+                vertical: AudySpacing.elementGap,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
+              ),
+              elevation: 4,
+              textStyle: AudyTypography.buttonText,
+            ),
+          ),
+          // Card theme with rounded corners
+          cardTheme: CardThemeData(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AudySpacing.radiusLarge),
+            ),
+          ),
+          // App bar with friendly colors
+          appBarTheme: AppBarTheme(
+            elevation: 0,
+            centerTitle: true,
+            backgroundColor: AudyColors.backgroundCream,
+            foregroundColor: AudyColors.textDark,
+            titleTextStyle: AudyTypography.headingMedium,
+          ),
+          // Bottom navigation for accessibility
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            backgroundColor: AudyColors.backgroundLight,
+            selectedItemColor: AudyColors.primarySoftBlue,
+            unselectedItemColor: AudyColors.textLight,
+            type: BottomNavigationBarType.fixed,
+            elevation: 8,
+            selectedLabelStyle: AudyTypography.labelMedium.copyWith(
+              fontSize: 14,
+            ),
+            unselectedLabelStyle: AudyTypography.bodySmall.copyWith(
+              fontSize: 12,
+            ),
           ),
         ),
         initialRoute: AppRoutes.dashboard,
@@ -52,7 +115,7 @@ class _AudyAppState extends State<AudyApp> {
           AppRoutes.dashboard: (_) => const DashboardPage(),
           AppRoutes.games: (_) => const GamesHubPage(),
           AppRoutes.emotionGame: (_) => const EmotionGamePage(),
-          AppRoutes.eyeContact: (_) => const EyeContactPage(),
+          AppRoutes.miniPuzzle: (_) => const MiniPuzzleModulePage(),
           AppRoutes.colorSorting: (_) => const ColorSortingPage(),
           AppRoutes.reactionTime: (_) => const ReactionTimePage(),
           AppRoutes.readingHub: (_) => const ReadPronouncePage(),

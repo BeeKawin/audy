@@ -18,11 +18,11 @@ class GamesHubPage extends StatelessWidget {
         AppRoutes.emotionGame,
       ),
       _RouteCard(
-        'Eye Contact',
-        'Focus training',
-        Icons.remove_red_eye_outlined,
+        'MiniPuzzle',
+        'Cognitive training',
+        Icons.extension_rounded,
         const Color(0xFFBDD8F2),
-        AppRoutes.eyeContact,
+        AppRoutes.miniPuzzle,
       ),
       _RouteCard(
         'Color Sorting',
@@ -383,115 +383,6 @@ class EmotionGamePage extends StatelessWidget {
               child: Text(
                 controller.emotionFeedback,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: adaptive.space(14),
-                  color: const Color(0xFF60758F),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class EyeContactPage extends StatelessWidget {
-  const EyeContactPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = AudyScope.of(context);
-
-    return AudyResponsivePage(
-      builder: (context, adaptive) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _TopRow(adaptive: adaptive, leadingLabel: 'Back to Home'),
-            SizedBox(height: adaptive.space(20)),
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    'Eye Contact Training',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: adaptive.space(28),
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF243A5A),
-                    ),
-                  ),
-                  SizedBox(height: adaptive.space(8)),
-                  Text(
-                    'Look at the cat icon. Keep looking as long as you can.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: adaptive.space(15),
-                      color: const Color(0xFF5F7390),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: adaptive.space(24)),
-            Center(
-              child: Container(
-                width: adaptive.isPhone ? 220 : 280,
-                height: adaptive.isPhone ? 220 : 280,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFFB45E), width: 5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFFD287).withValues(alpha: 0.28),
-                      blurRadius: 28,
-                      spreadRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Center(child: AudyMascot(size: 120)),
-              ),
-            ),
-            SizedBox(height: adaptive.space(24)),
-            Center(
-              child: Text(
-                controller.eyeContactFormatted,
-                style: TextStyle(
-                  fontSize: adaptive.space(44),
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF243A5A),
-                ),
-              ),
-            ),
-            SizedBox(height: adaptive.space(20)),
-            Center(
-              child: Wrap(
-                spacing: adaptive.space(12),
-                runSpacing: adaptive.space(12),
-                alignment: WrapAlignment.center,
-                children: [
-                  AudyPillButton(
-                    label: controller.eyeContactRunning ? 'Stop' : 'Start',
-                    color: const Color(0xFFBDD8F2),
-                    adaptive: adaptive,
-                    onPressed: controller.eyeContactRunning
-                        ? controller.stopEyeContactSession
-                        : controller.startEyeContactSession,
-                  ),
-                  AudyPillButton(
-                    label: 'Reset',
-                    color: const Color(0xFFFFF2A8),
-                    adaptive: adaptive,
-                    onPressed: controller.resetEyeContactSession,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: adaptive.space(14)),
-            Center(
-              child: Text(
-                'Best: ${(controller.eyeContactBestMs / 1000).toStringAsFixed(1)}s',
                 style: TextStyle(
                   fontSize: adaptive.space(14),
                   color: const Color(0xFF60758F),

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:testrun1/main.dart';
+import 'package:audy_app/main.dart';
 
 void main() {
   testWidgets('dashboard renders and routes to games', (tester) async {
@@ -9,7 +9,7 @@ void main() {
     expect(find.text('Today\'s Progress'), findsOneWidget);
     expect(find.text('Activities'), findsOneWidget);
     expect(find.text('Games'), findsOneWidget);
-    expect(find.text('CEDT INNOVATION SUMMIT 2026'), findsOneWidget);
+    expect(find.text('Autism-Friendly Learning App'), findsOneWidget);
 
     final gamesFinder = find.text('Games').first;
     await tester.ensureVisible(gamesFinder);

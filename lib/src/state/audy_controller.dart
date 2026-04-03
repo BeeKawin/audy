@@ -151,10 +151,6 @@ class AudyController extends ChangeNotifier {
   int emotionScore = 0;
   String emotionFeedback = 'Choose the matching emotion.';
 
-  bool eyeContactRunning = false;
-  int eyeContactElapsedMs = 0;
-  int eyeContactBestMs = 0;
-
   String colorFeedback = 'Select a shape, then tap a basket.';
   String? selectedColorPieceId;
   int colorMatches = 0;
@@ -180,7 +176,6 @@ class AudyController extends ChangeNotifier {
 
   late List<AccessoryItem> accessories;
 
-  Timer? _eyeContactTimer;
   Timer? _reactionRevealTimer;
   DateTime? _reactionRoundStartedAt;
 
@@ -194,7 +189,7 @@ class AudyController extends ChangeNotifier {
     if (socialMessages.where((message) => message.isUser).isNotEmpty) {
       completed++;
     }
-    if (colorMatches > 0 || reactionScore > 0 || eyeContactBestMs > 0) {
+    if (colorMatches > 0 || reactionScore > 0) {
       completed++;
     }
     return completed / 4;
@@ -219,10 +214,6 @@ class AudyController extends ChangeNotifier {
 
   /// Exposes the current color pieces available for sorting.
   List<ColorPiece> get colorPieces => List.unmodifiable(_colorPieces);
-
-  /// Returns the formatted eye contact timer label for the UI.
-  String get eyeContactFormatted =>
-      '${(eyeContactElapsedMs / 1000).toStringAsFixed(1)}s';
 
   /// Returns the current reaction score label shown in the UI.
   String get reactionScoreLabel => 'Score: $reactionScore';
@@ -315,50 +306,6 @@ class AudyController extends ChangeNotifier {
       method: RequestMethod.post,
       payload: {'prompt': prompt, 'voice': 'friendly-guide'},
     );
-    notifyListeners();
-  }
-
-  /// Starts the eye contact timer and prepares a draft session request.
-  void startEyeContactSession() {
-    if (eyeContactRunning) return;
-    eyeContactRunning = true;
-    _prepareRequest(
-      feature: 'eye_contact',
-      endpoint: '/api/games/eye-contact/start',
-      method: RequestMethod.post,
-      payload: {'startedAt': DateTime.now().toIso8601String()},
-    );
-    _eyeContactTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      eyeContactElapsedMs += 100;
-      notifyListeners();
-    });
-    notifyListeners();
-  }
-
-  /// Stops the eye contact timer and stores a draft completion request.
-  void stopEyeContactSession() {
-    if (!eyeContactRunning) return;
-    eyeContactRunning = false;
-    _eyeContactTimer?.cancel();
-    eyeContactBestMs = max(eyeContactBestMs, eyeContactElapsedMs);
-    learningPoints += (eyeContactElapsedMs / 1000).floor();
-    _prepareRequest(
-      feature: 'eye_contact',
-      endpoint: '/api/games/eye-contact/complete',
-      method: RequestMethod.post,
-      payload: {
-        'durationMs': eyeContactElapsedMs,
-        'bestDurationMs': eyeContactBestMs,
-      },
-    );
-    notifyListeners();
-  }
-
-  /// Resets the eye contact timer state locally.
-  void resetEyeContactSession() {
-    _eyeContactTimer?.cancel();
-    eyeContactRunning = false;
-    eyeContactElapsedMs = 0;
     notifyListeners();
   }
 
@@ -613,7 +560,6 @@ class AudyController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _eyeContactTimer?.cancel();
     _reactionRevealTimer?.cancel();
     super.dispose();
   }

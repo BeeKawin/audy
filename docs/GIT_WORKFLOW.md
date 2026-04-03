@@ -10,7 +10,7 @@
 ## Local Setup
 
 ```powershell
-cd C:\Users\User\Desktop\AUDY\testrun1
+cd C:\Users\User\Desktop\AUDY\audy_app
 git init
 git branch -M main
 git checkout -b dev

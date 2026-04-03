@@ -779,7 +779,7 @@ class _ProfileChartsSection extends StatelessWidget {
           color: Color(0xFFF7BCD8),
         ),
         _ChartCard(
-          title: 'Eye Contact Duration (seconds)',
+          title: 'MiniPuzzle Progress (seconds)',
           values: [0.32, 0.41, 0.45, 0.52, 0.61, 0.69, 0.73],
           color: Color(0xFFBDD8F2),
         ),
@@ -882,7 +882,7 @@ class _SkillsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const skills = [
       ('Emotions', 0.84),
-      ('Eye Contact', 0.72),
+      ('MiniPuzzle', 0.72),
       ('Colors', 0.88),
       ('Reactions', 0.90),
       ('Reading', 0.76),
