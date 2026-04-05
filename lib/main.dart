@@ -6,9 +6,16 @@ import 'src/features/dashboard_page.dart';
 import 'src/features/feature_pages.dart';
 import 'src/features/mini_puzzle_module.dart';
 import 'src/features/profile_and_rewards_pages.dart';
+import 'src/services/emotion_service.dart';
 import 'src/state/audy_controller.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await EmotionService.init();
+  } catch (e) {
+    debugPrint('Emotion model failed to load: $e');
+  }
   runApp(const AudyApp());
 }
 
@@ -21,6 +28,7 @@ class AudyApp extends StatefulWidget {
 
 class _AudyAppState extends State<AudyApp> {
   late final AudyController controller;
+  final int _currentIndex = 0;
 
   @override
   void initState() {
@@ -43,16 +51,15 @@ class _AudyAppState extends State<AudyApp> {
         title: 'AUDY - Autism-Friendly Learning',
         theme: ThemeData(
           useMaterial3: true,
-          scaffoldBackgroundColor: AudyColors.backgroundCream,
+          scaffoldBackgroundColor: AudyColors.backgroundPrimary,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: AudyColors.primarySoftBlue,
-            primary: AudyColors.primarySoftBlue,
-            secondary: AudyColors.primaryMint,
-            tertiary: AudyColors.accentSunny,
-            surface: AudyColors.backgroundLight,
+            seedColor: AudyColors.skyBlue,
+            primary: AudyColors.skyBlue,
+            secondary: AudyColors.mintGreen,
+            tertiary: AudyColors.activityRewards,
+            surface: AudyColors.backgroundCard,
             brightness: Brightness.light,
           ),
-          // High contrast text theme for readability
           textTheme: TextTheme(
             displayLarge: AudyTypography.displayLarge,
             displayMedium: AudyTypography.displayMedium,
@@ -65,7 +72,6 @@ class _AudyAppState extends State<AudyApp> {
             labelLarge: AudyTypography.labelLarge,
             labelMedium: AudyTypography.labelMedium,
           ),
-          // Large, friendly button theme
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(0, AudySpacing.buttonHeight),
@@ -80,25 +86,21 @@ class _AudyAppState extends State<AudyApp> {
               textStyle: AudyTypography.buttonText,
             ),
           ),
-          // Card theme with rounded corners
           cardTheme: CardThemeData(
             elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AudySpacing.radiusLarge),
             ),
           ),
-          // App bar with friendly colors
-          appBarTheme: AppBarTheme(
+          appBarTheme: const AppBarTheme(
             elevation: 0,
             centerTitle: true,
-            backgroundColor: AudyColors.backgroundCream,
-            foregroundColor: AudyColors.textDark,
-            titleTextStyle: AudyTypography.headingMedium,
+            backgroundColor: AudyColors.backgroundPrimary,
+            foregroundColor: AudyColors.textPrimary,
           ),
-          // Bottom navigation for accessibility
           bottomNavigationBarTheme: BottomNavigationBarThemeData(
-            backgroundColor: AudyColors.backgroundLight,
-            selectedItemColor: AudyColors.primarySoftBlue,
+            backgroundColor: AudyColors.backgroundCard,
+            selectedItemColor: AudyColors.skyBlue,
             unselectedItemColor: AudyColors.textLight,
             type: BottomNavigationBarType.fixed,
             elevation: 8,
@@ -112,8 +114,8 @@ class _AudyAppState extends State<AudyApp> {
         ),
         initialRoute: AppRoutes.dashboard,
         routes: {
-          AppRoutes.dashboard: (_) => const DashboardPage(),
-          AppRoutes.games: (_) => const GamesHubPage(),
+          AppRoutes.dashboard: (_) => _HomeShell(currentIndex: _currentIndex),
+          AppRoutes.games: (_) => _HomeShell(currentIndex: 1),
           AppRoutes.emotionGame: (_) => const EmotionGamePage(),
           AppRoutes.miniPuzzle: (_) => const MiniPuzzleModulePage(),
           AppRoutes.colorSorting: (_) => const ColorSortingPage(),
@@ -140,9 +142,59 @@ class _AudyAppState extends State<AudyApp> {
             illustrationIcon: Icons.favorite_rounded,
           ),
           AppRoutes.social: (_) => const SocialPracticePage(),
-          AppRoutes.rewards: (_) => const RewardsPage(),
-          AppRoutes.profile: (_) => const ProfilePage(),
+          AppRoutes.rewards: (_) => _HomeShell(currentIndex: 2),
+          AppRoutes.profile: (_) => _HomeShell(currentIndex: 3),
         },
+      ),
+    );
+  }
+}
+
+class _HomeShell extends StatelessWidget {
+  const _HomeShell({required this.currentIndex});
+
+  final int currentIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = const [
+      DashboardPage(),
+      GamesHubPage(),
+      RewardsPage(),
+      ProfilePage(),
+    ];
+
+    return Scaffold(
+      body: pages[currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: currentIndex,
+        onTap: (index) {
+          final routes = [
+            AppRoutes.dashboard,
+            AppRoutes.games,
+            AppRoutes.rewards,
+            AppRoutes.profile,
+          ];
+          Navigator.pushReplacementNamed(context, routes[index]);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_esports_rounded),
+            label: 'Games',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.workspace_premium_rounded),
+            label: 'Rewards',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

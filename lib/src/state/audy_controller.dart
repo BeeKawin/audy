@@ -150,6 +150,11 @@ class AudyController extends ChangeNotifier {
   int emotionQuestionIndex = 0;
   int emotionScore = 0;
   String emotionFeedback = 'Choose the matching emotion.';
+  int emotionCurrentRound = 1;
+  int emotionTotalRounds = 4;
+  String emotionCurrentTarget = '';
+  String emotionLastDetected = '';
+  double emotionLastConfidence = 0.0;
 
   String colorFeedback = 'Select a shape, then tap a basket.';
   String? selectedColorPieceId;
@@ -173,6 +178,7 @@ class AudyController extends ChangeNotifier {
   int learningPoints = 245;
   int gamesPlayed = 47;
   int dayStreak = 5;
+  int totalStars = 3;
 
   late List<AccessoryItem> accessories;
 
@@ -279,6 +285,7 @@ class AudyController extends ChangeNotifier {
     if (isCorrect) {
       emotionScore += 1;
       learningPoints += 5;
+      emotionCurrentTarget = currentEmotionQuestion.correctAnswer;
     }
     gamesPlayed += 1;
     _prepareRequest(
@@ -295,6 +302,44 @@ class AudyController extends ChangeNotifier {
     );
     emotionQuestionIndex =
         (emotionQuestionIndex + 1) % _emotionQuestions.length;
+    notifyListeners();
+  }
+
+  void advanceEmotionRound() {
+    if (emotionCurrentRound < emotionTotalRounds) {
+      emotionCurrentRound += 1;
+    }
+    emotionQuestionIndex =
+        (emotionQuestionIndex + 1) % _emotionQuestions.length;
+    emotionLastDetected = '';
+    emotionLastConfidence = 0.0;
+    notifyListeners();
+  }
+
+  bool get isEmotionGameComplete => emotionCurrentRound >= emotionTotalRounds;
+
+  void resetEmotionGame() {
+    emotionCurrentRound = 1;
+    emotionScore = 0;
+    emotionQuestionIndex = 0;
+    emotionFeedback = 'Choose the matching emotion.';
+    emotionCurrentTarget = '';
+    emotionLastDetected = '';
+    emotionLastConfidence = 0.0;
+    notifyListeners();
+  }
+
+  void setEmotionResult({
+    required String detected,
+    required double confidence,
+  }) {
+    emotionLastDetected = detected;
+    emotionLastConfidence = confidence;
+    notifyListeners();
+  }
+
+  void recordEmotionGamePlay() {
+    gamesPlayed += 1;
     notifyListeners();
   }
 

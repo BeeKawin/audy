@@ -22,8 +22,8 @@ class AudyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = color ??
-        (isSecondary ? AudyColors.primaryMint : AudyColors.primarySoftBlue);
+    final bgColor =
+        color ?? (isSecondary ? AudyColors.mintGreen : AudyColors.skyBlue);
 
     return SizedBox(
       height: AudySpacing.buttonHeight,
@@ -32,7 +32,7 @@ class AudyButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
-          foregroundColor: AudyColors.textOnDark,
+          foregroundColor: AudyColors.textOnColor,
           elevation: 4,
           shadowColor: bgColor.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
@@ -51,12 +51,7 @@ class AudyButton extends StatelessWidget {
               Icon(icon, size: AudySpacing.iconMedium),
               const SizedBox(width: AudySpacing.smallGap),
             ],
-            Text(
-              label,
-              style: AudyTypography.buttonText.copyWith(
-                color: AudyColors.textOnDark,
-              ),
-            ),
+            Text(label, style: AudyTypography.buttonText),
           ],
         ),
       ),
@@ -113,13 +108,11 @@ class AudyGameCard extends StatelessWidget {
                   padding: const EdgeInsets.all(AudySpacing.smallGap),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(AudySpacing.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      AudySpacing.radiusMedium,
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    size: AudySpacing.iconLarge,
-                    color: color,
-                  ),
+                  child: Icon(icon, size: AudySpacing.iconLarge, color: color),
                 ),
                 ...(badge == null ? const <Widget>[] : <Widget>[badge!]),
               ],
@@ -182,12 +175,9 @@ class AudyActivityCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AudySpacing.cardPadding),
           decoration: BoxDecoration(
-            color: AudyColors.backgroundLight,
+            color: AudyColors.backgroundCard,
             borderRadius: BorderRadius.circular(AudySpacing.radiusLarge),
-            border: Border.all(
-              color: color.withValues(alpha: 0.3),
-              width: 2,
-            ),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
             boxShadow: AudyShadows.cardShadow,
           ),
           child: Column(
@@ -199,8 +189,9 @@ class AudyActivityCard extends StatelessWidget {
                     padding: const EdgeInsets.all(AudySpacing.smallGap),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.15),
-                      borderRadius:
-                          BorderRadius.circular(AudySpacing.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        AudySpacing.radiusMedium,
+                      ),
                     ),
                     child: Icon(
                       isLocked ? Icons.lock_rounded : icon,
@@ -213,14 +204,8 @@ class AudyActivityCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          style: AudyTypography.labelMedium,
-                        ),
-                        Text(
-                          subtitle,
-                          style: AudyTypography.bodySmall,
-                        ),
+                        Text(title, style: AudyTypography.labelMedium),
+                        Text(subtitle, style: AudyTypography.bodySmall),
                       ],
                     ),
                   ),
@@ -273,7 +258,7 @@ class AudyStar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: Icon(
             Icons.star_rounded,
-            color: AudyColors.rewardStar,
+            color: AudyColors.starGold,
             size: size,
           ),
         ),
@@ -299,7 +284,7 @@ class AudySectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerColor = color ?? AudyColors.primarySoftBlue;
+    final headerColor = color ?? AudyColors.skyBlue;
 
     return Row(
       children: [
@@ -316,12 +301,7 @@ class AudySectionHeader extends StatelessWidget {
           Icon(icon, color: headerColor, size: AudySpacing.iconMedium),
           const SizedBox(width: AudySpacing.smallGap),
         ],
-        Expanded(
-          child: Text(
-            title,
-            style: AudyTypography.headingSmall,
-          ),
-        ),
+        Expanded(child: Text(title, style: AudyTypography.headingSmall)),
         ...(action == null ? const <Widget>[] : <Widget>[action!]),
       ],
     );
@@ -342,13 +322,13 @@ class AudyMascot extends StatelessWidget {
   Color get _emotionColor {
     switch (emotion) {
       case MascotEmotion.happy:
-        return AudyColors.primaryMint;
+        return AudyColors.mintGreen;
       case MascotEmotion.excited:
-        return AudyColors.accentSunny;
+        return AudyColors.activityRewards;
       case MascotEmotion.thinking:
-        return AudyColors.primarySoftBlue;
+        return AudyColors.skyBlue;
       case MascotEmotion.cheering:
-        return AudyColors.accentCoral;
+        return AudyColors.blushPink;
     }
   }
 
@@ -373,11 +353,7 @@ class AudyMascot extends StatelessWidget {
         ],
       ),
       child: Center(
-        child: Icon(
-          _getEmotionIcon(),
-          size: size * 0.5,
-          color: _emotionColor,
-        ),
+        child: Icon(_getEmotionIcon(), size: size * 0.5, color: _emotionColor),
       ),
     );
   }
@@ -400,12 +376,7 @@ enum MascotEmotion { happy, excited, thinking, cheering }
 
 /// Clear, high-contrast badge
 class AudyBadge extends StatelessWidget {
-  const AudyBadge({
-    super.key,
-    required this.label,
-    this.color,
-    this.icon,
-  });
+  const AudyBadge({super.key, required this.label, this.color, this.icon});
 
   final String label;
   final Color? color;
@@ -413,7 +384,7 @@ class AudyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badgeColor = color ?? AudyColors.accentSunny;
+    final badgeColor = color ?? AudyColors.activityRewards;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -435,14 +406,14 @@ class AudyBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: AudyColors.textDark),
+            Icon(icon, size: 16, color: AudyColors.textPrimary),
             const SizedBox(width: 4),
           ],
           Text(
             label,
             style: AudyTypography.labelMedium.copyWith(
               fontSize: 14,
-              color: AudyColors.textDark,
+              color: AudyColors.textPrimary,
             ),
           ),
         ],

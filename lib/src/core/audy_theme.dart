@@ -1,232 +1,223 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Autism-friendly color palette designed for:
+/// - Calming pastel tones to prevent sensory overload
 /// - High contrast for visual clarity
-/// - Calming base with engaging accent colors
 /// - Reduced eye strain
 /// - Clear visual differentiation
 class AudyColors {
-  // Primary Colors - Soft and Calming
-  static const Color primarySoftBlue = Color(0xFF5B9BD5);
-  static const Color primaryMint = Color(0xFF6BCB77);
-  static const Color primaryLavender = Color(0xFFB4A7D6);
-  static const Color primaryPeach = Color(0xFFFFB997);
+  // Core Pastel Palette
+  static const Color skyBlue = Color(0xFF8AD0E9);
+  static const Color mintGreen = Color(0xFF9DE7CB);
+  static const Color iceBlue = Color(0xFFC7EBF8);
+  static const Color softLavender = Color(0xFFD0ABDF);
+  static const Color blushPink = Color(0xFFF1B4D3);
+  static const Color ivoryWhite = Color(0xFFFFFCFC);
 
-  // Vibrant Accent Colors - For engagement (used sparingly)
-  static const Color accentSunny = Color(0xFFFFD93D);
-  static const Color accentCoral = Color(0xFFFF6B6B);
-  static const Color accentTurquoise = Color(0xFF4ECDC4);
-  static const Color accentLime = Color(0xFF95E1A8);
+  // Background Colors
+  static const Color backgroundPrimary = ivoryWhite;
+  static const Color backgroundSoft = iceBlue;
+  static const Color backgroundCard = ivoryWhite;
 
-  // Background Colors - High contrast but soothing
-  static const Color backgroundLight = Color(0xFFFEFEFE);
-  static const Color backgroundCream = Color(0xFFFDF8F3);
-  static const Color backgroundSoftBlue = Color(0xFFE8F4FC);
-  static const Color backgroundSoftGreen = Color(0xFFE8F8F0);
+  // Text Colors
+  static const Color textPrimary = Color(0xFF2D3748);
+  static const Color textSecondary = Color(0xFF4A5568);
+  static const Color textLight = Color(0xFF718096);
+  static const Color textOnColor = Color(0xFFFFFFFF);
 
-  // Text Colors - Maximum readability
-  static const Color textDark = Color(0xFF1A1A2E);
-  static const Color textMedium = Color(0xFF4A4A6A);
-  static const Color textLight = Color(0xFF7A7A9A);
-  static const Color textOnDark = Color(0xFFFFFFFF);
+  // Functional Colors
+  static const Color success = Color(0xFF68D391);
+  static const Color error = Color(0xFFFC8181);
+  static const Color warning = Color(0xFFFBD38D);
+  static const Color info = skyBlue;
 
-  // Game Category Colors - Distinct and recognizable
-  static const Color gamesEmotion = Color(0xFFFF9F43); // Warm Orange
-  static const Color gamesMiniPuzzle = Color(0xFF54A0FF); // Sky Blue
-  static const Color gamesColorSort = Color(0xFF5F27CD); // Purple
-  static const Color gamesReaction = Color(0xFF10AC84); // Teal
-
-  // Reading Category Colors
-  static const Color readingLetters = Color(0xFFFF6B6B); // Soft Red
-  static const Color readingWords = Color(0xFF4ECDC4); // Turquoise
-  static const Color readingSentences = Color(0xFF95E1D3); // Mint
+  // Activity Colors (soft, distinct, recognizable)
+  static const Color activityGames = skyBlue;
+  static const Color activityReading = mintGreen;
+  static const Color activitySocial = softLavender;
+  static const Color activityRewards = Color(0xFFFBD38D);
 
   // Reward Colors
-  static const Color rewardGold = Color(0xFFFFD700);
-  static const Color rewardSilver = Color(0xFFC0C0C0);
-  static const Color rewardBronze = Color(0xFFCD7F32);
-  static const Color rewardStar = Color(0xFFFFD93D);
+  static const Color starGold = Color(0xFFFBD38D);
+  static const Color starSilver = Color(0xFFCBD5E0);
 
-  // Feedback Colors
-  static const Color success = Color(0xFF6BCB77);
-  static const Color error = Color(0xFFFF6B6B);
-  static const Color warning = Color(0xFFFFB997);
-  static const Color info = Color(0xFF5B9BD5);
+  // Border Colors
+  static const Color borderLight = Color(0xFFE2E8F0);
+  static const Color borderFocus = skyBlue;
 
-  // Gradient Presets
-  static const Gradient gradientSunny = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFFFE5B4), Color(0xFFFFD93D)],
-  );
-
-  static const Gradient gradientOcean = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFF74B9FF), Color(0xFF0984E3)],
-  );
-
-  static const Gradient gradientNature = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFF95E1A8), Color(0xFF6BCB77)],
-  );
-
-  static const Gradient gradientMagic = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFB4A7D6), Color(0xFF6C5CE7)],
-  );
+  // Shadow Colors
+  static const Color shadowSoft = Color(0x0A2D3748);
+  static const Color shadowMedium = Color(0x142D3748);
 }
 
-/// Typography designed for readability
+/// Typography using Lexend (body) and Fredoka (headlines)
 class AudyTypography {
-  // Base text styles with larger sizes for accessibility
-  static const String fontFamily = 'Nunito';
-
-  static TextStyle get displayLarge => const TextStyle(
-    fontSize: 48,
-    fontWeight: FontWeight.bold,
-    color: AudyColors.textDark,
+  static TextStyle get displayLarge => GoogleFonts.fredoka(
+    fontSize: 44,
+    fontWeight: FontWeight.w700,
+    color: AudyColors.textPrimary,
     letterSpacing: 0.5,
     height: 1.2,
   );
 
-  static TextStyle get displayMedium => const TextStyle(
+  static TextStyle get displayMedium => GoogleFonts.fredoka(
     fontSize: 36,
-    fontWeight: FontWeight.bold,
-    color: AudyColors.textDark,
+    fontWeight: FontWeight.w700,
+    color: AudyColors.textPrimary,
     letterSpacing: 0.3,
     height: 1.3,
   );
 
-  static TextStyle get headingLarge => const TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: AudyColors.textDark,
+  static TextStyle get headingLarge => GoogleFonts.fredoka(
+    fontSize: 30,
+    fontWeight: FontWeight.w700,
+    color: AudyColors.textPrimary,
     letterSpacing: 0.2,
     height: 1.3,
   );
 
-  static TextStyle get headingMedium => const TextStyle(
-    fontSize: 28,
+  static TextStyle get headingMedium => GoogleFonts.fredoka(
+    fontSize: 26,
     fontWeight: FontWeight.w600,
-    color: AudyColors.textDark,
+    color: AudyColors.textPrimary,
     letterSpacing: 0.1,
     height: 1.4,
   );
 
-  static TextStyle get headingSmall => const TextStyle(
-    fontSize: 24,
+  static TextStyle get headingSmall => GoogleFonts.fredoka(
+    fontSize: 22,
     fontWeight: FontWeight.w600,
-    color: AudyColors.textDark,
+    color: AudyColors.textPrimary,
     height: 1.4,
   );
 
-  static TextStyle get bodyLarge => const TextStyle(
+  static TextStyle get bodyLarge => GoogleFonts.lexend(
     fontSize: 20,
-    fontWeight: FontWeight.normal,
-    color: AudyColors.textMedium,
-    height: 1.5,
+    fontWeight: FontWeight.w400,
+    color: AudyColors.textSecondary,
+    height: 1.6,
   );
 
-  static TextStyle get bodyMedium => const TextStyle(
+  static TextStyle get bodyMedium => GoogleFonts.lexend(
     fontSize: 18,
-    fontWeight: FontWeight.normal,
-    color: AudyColors.textMedium,
-    height: 1.5,
+    fontWeight: FontWeight.w400,
+    color: AudyColors.textSecondary,
+    height: 1.6,
   );
 
-  static TextStyle get bodySmall => const TextStyle(
+  static TextStyle get bodySmall => GoogleFonts.lexend(
     fontSize: 16,
-    fontWeight: FontWeight.normal,
-    color: AudyColors.textMedium,
-    height: 1.5,
+    fontWeight: FontWeight.w400,
+    color: AudyColors.textSecondary,
+    height: 1.6,
   );
 
-  static TextStyle get labelLarge => const TextStyle(
+  static TextStyle get labelLarge => GoogleFonts.lexend(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: AudyColors.textDark,
-    letterSpacing: 0.5,
-  );
-
-  static TextStyle get labelMedium => const TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: AudyColors.textDark,
+    color: AudyColors.textPrimary,
     letterSpacing: 0.3,
   );
 
-  static TextStyle get buttonText => const TextStyle(
+  static TextStyle get labelMedium => GoogleFonts.lexend(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AudyColors.textPrimary,
+    letterSpacing: 0.2,
+  );
+
+  static TextStyle get buttonText => GoogleFonts.lexend(
     fontSize: 20,
-    fontWeight: FontWeight.bold,
-    color: AudyColors.textOnDark,
-    letterSpacing: 0.5,
+    fontWeight: FontWeight.w600,
+    color: AudyColors.textOnColor,
+    letterSpacing: 0.3,
+  );
+
+  static TextStyle get cardTitle => GoogleFonts.fredoka(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: AudyColors.textPrimary,
+    height: 1.3,
+  );
+
+  static TextStyle get greeting => GoogleFonts.fredoka(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    color: AudyColors.textPrimary,
+    height: 1.3,
+  );
+
+  static TextStyle get starCount => GoogleFonts.fredoka(
+    fontSize: 32,
+    fontWeight: FontWeight.w700,
+    color: AudyColors.textPrimary,
+    height: 1.2,
   );
 }
 
-/// Spacing and sizing constants
+/// Spacing and sizing constants - increased for autism-friendly touch targets
 class AudySpacing {
-  // Touch targets - minimum 48dp for accessibility
+  // Touch targets - minimum 56dp for accessibility
   static const double touchTargetMin = 56.0;
-  static const double buttonHeight = 64.0;
+  static const double buttonHeight = 68.0;
   static const double cardPadding = 24.0;
-  static const double sectionGap = 32.0;
+  static const double sectionGap = 36.0;
   static const double elementGap = 20.0;
-  static const double smallGap = 12.0;
+  static const double smallGap = 14.0;
+  static const double screenPadding = 24.0;
 
   // Border radius for friendly, rounded shapes
-  static const double radiusSmall = 12.0;
-  static const double radiusMedium = 20.0;
-  static const double radiusLarge = 28.0;
-  static const double radiusXLarge = 36.0;
+  static const double radiusSmall = 14.0;
+  static const double radiusMedium = 22.0;
+  static const double radiusLarge = 32.0;
+  static const double radiusXLarge = 40.0;
   static const double radiusCircular = 100.0;
 
-  // Icon sizes
-  static const double iconSmall = 28.0;
-  static const double iconMedium = 36.0;
-  static const double iconLarge = 48.0;
-  static const double iconXLarge = 64.0;
+  // Icon sizes - increased for visual clarity
+  static const double iconSmall = 32.0;
+  static const double iconMedium = 48.0;
+  static const double iconLarge = 64.0;
+  static const double iconXLarge = 80.0;
 }
 
-/// Shadow styles for depth without overwhelming visuals
+/// Shadow styles - soft, non-overwhelming depth
 class AudyShadows {
   static const BoxShadow soft = BoxShadow(
-    color: Color(0x1A5B9BD5),
-    blurRadius: 20,
-    offset: Offset(0, 8),
-    spreadRadius: -5,
+    color: AudyColors.shadowSoft,
+    blurRadius: 16,
+    offset: Offset(0, 4),
+    spreadRadius: -2,
   );
 
   static const BoxShadow medium = BoxShadow(
-    color: Color(0x265B9BD5),
-    blurRadius: 30,
-    offset: Offset(0, 12),
-    spreadRadius: -8,
+    color: AudyColors.shadowMedium,
+    blurRadius: 24,
+    offset: Offset(0, 8),
+    spreadRadius: -4,
   );
 
-  static const BoxShadow lifted = BoxShadow(
-    color: Color(0x335B9BD5),
-    blurRadius: 40,
-    offset: Offset(0, 16),
-    spreadRadius: -10,
+  static const BoxShadow pressed = BoxShadow(
+    color: AudyColors.shadowSoft,
+    blurRadius: 12,
+    offset: Offset(0, 2),
+    spreadRadius: -1,
   );
 
   static const List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Color(0x1A7A63C7),
-      blurRadius: 15,
+      color: AudyColors.shadowSoft,
+      blurRadius: 20,
       offset: Offset(0, 6),
       spreadRadius: -3,
     ),
   ];
 }
 
-/// Animation durations - slower for accessibility, can be disabled
+/// Animation durations - slower, gentler for accessibility
 class AudyAnimation {
-  static const Duration quick = Duration(milliseconds: 200);
-  static const Duration normal = Duration(milliseconds: 350);
-  static const Duration slow = Duration(milliseconds: 500);
-  static const Duration emphasis = Duration(milliseconds: 750);
+  static const Duration quick = Duration(milliseconds: 150);
+  static const Duration normal = Duration(milliseconds: 250);
+  static const Duration slow = Duration(milliseconds: 400);
+  static const Duration emphasis = Duration(milliseconds: 600);
 }
