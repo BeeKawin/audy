@@ -6,6 +6,7 @@ import 'src/features/dashboard_page.dart';
 import 'src/features/feature_pages.dart';
 import 'src/features/mini_puzzle_module.dart';
 import 'src/features/profile_and_rewards_pages.dart';
+import 'src/features/sorting_game/sort_level_select_screen.dart';
 import 'src/services/emotion_service.dart';
 import 'src/state/audy_controller.dart';
 
@@ -119,6 +120,7 @@ class _AudyAppState extends State<AudyApp> {
           AppRoutes.emotionGame: (_) => const EmotionGamePage(),
           AppRoutes.miniPuzzle: (_) => const MiniPuzzleModulePage(),
           AppRoutes.colorSorting: (_) => const ColorSortingPage(),
+          AppRoutes.sortingGame: (_) => const SortLevelSelectScreen(),
           AppRoutes.reactionTime: (_) => const ReactionTimePage(),
           AppRoutes.readingHub: (_) => const ReadPronouncePage(),
           AppRoutes.letters: (_) => const ReadingPracticePage(

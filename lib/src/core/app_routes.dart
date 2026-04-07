@@ -4,6 +4,7 @@ final class AppRoutes {
   static const emotionGame = '/games/emotion';
   static const miniPuzzle = '/games/mini-puzzle';
   static const colorSorting = '/games/color-sorting';
+  static const sortingGame = '/games/sorting';
   static const reactionTime = '/games/reaction-time';
   static const readingHub = '/reading';
   static const letters = '/reading/letters';

@@ -9,6 +9,26 @@ enum SortShape { circle, square, triangle }
 
 enum RequestMethod { get, post, put }
 
+enum ReactionGameState { idle, waiting, ready, tooEarly, result }
+
+enum ColorSortRound { colorOnly, colorAndShape, withDistractors }
+
+class ColorSortRoundData {
+  const ColorSortRoundData({
+    required this.round,
+    required this.label,
+    required this.instruction,
+    required this.pieces,
+    required this.baskets,
+  });
+
+  final ColorSortRound round;
+  final String label;
+  final String instruction;
+  final List<ColorPiece> pieces;
+  final List<String> baskets;
+}
+
 class PreparedRequest {
   const PreparedRequest({
     required this.feature,
@@ -143,7 +163,7 @@ class AudyController extends ChangeNotifier {
 
   late final List<EmotionQuestion> _emotionQuestions;
   late final Map<ReadingModule, List<String>> _readingPrompts;
-  late final List<ColorPiece> _colorPieces;
+  late List<ColorPiece> _colorPieces;
 
   final List<PreparedRequest> preparedRequests = [];
 
@@ -156,18 +176,29 @@ class AudyController extends ChangeNotifier {
   String emotionLastDetected = '';
   double emotionLastConfidence = 0.0;
 
-  String colorFeedback = 'Select a shape, then tap a basket.';
+  ColorSortRound colorCurrentRound = ColorSortRound.colorOnly;
   String? selectedColorPieceId;
   int colorMatches = 0;
   int colorMisses = 0;
+  int colorTotalItems = 0;
+  int _colorRoundMatches = 0;
+  int _colorRoundMisses = 0;
+  bool colorRoundComplete = false;
+  final List<Map<String, dynamic>> colorRoundResults = [];
+  final List<int> colorSortTimes = [];
+  DateTime? _colorSortRoundStartedAt;
+  Map<String, dynamic>? colorApiPayload;
+  String _colorFeedback = 'Tap a piece, then tap the matching basket.';
+  String get colorFeedback => _colorFeedback;
 
+  final int reactionTotalRounds = 5;
   int reactionRound = 1;
-  int reactionScore = 0;
+  final List<int> reactionTimes = [];
   int reactionMisses = 0;
-  bool reactionWaitingForSymbol = false;
-  bool reactionSymbolVisible = false;
-  String reactionFeedback = 'Tap the play area to start a round.';
-  IconData reactionSymbol = Icons.auto_awesome_rounded;
+  ReactionGameState reactionState = ReactionGameState.idle;
+  int currentReactionTimeMs = 0;
+  String reactionFeedback = 'Tap the container when it turns green.';
+  Map<String, dynamic>? reactionApiPayload;
 
   final Map<ReadingModule, ReadingPracticeState> readingStates = {};
 
@@ -185,31 +216,68 @@ class AudyController extends ChangeNotifier {
   Timer? _reactionRevealTimer;
   DateTime? _reactionRoundStartedAt;
 
-  /// Returns the current dashboard completion ratio from local feature progress.
-  double get dashboardProgress {
-    var completed = 0;
-    if (emotionScore > 0) completed++;
-    if (readingStates.values.any((state) => state.progressCurrent > 0)) {
-      completed++;
+  String get colorRoundLabel {
+    switch (colorCurrentRound) {
+      case ColorSortRound.colorOnly:
+        return 'Round 1: Sort by color';
+      case ColorSortRound.colorAndShape:
+        return 'Round 2: Color & shape';
+      case ColorSortRound.withDistractors:
+        return 'Round 3: Watch for fakes!';
     }
-    if (socialMessages.where((message) => message.isUser).isNotEmpty) {
-      completed++;
-    }
-    if (colorMatches > 0 || reactionScore > 0) {
-      completed++;
-    }
-    return completed / 4;
   }
 
-  /// Returns a human-readable progress label for the dashboard progress card.
-  String get dashboardProgressLabel =>
-      '${(dashboardProgress * 100).round()}% Complete';
+  bool get isColorSortComplete => colorRoundResults.length >= 3;
 
-  /// Returns the active emotion question displayed on the emotion screen.
+  int get colorTotalAccuracy {
+    final totalCorrect = colorRoundResults.fold<int>(
+      0,
+      (sum, r) => sum + (r['correct'] as int),
+    );
+    final totalAttempts = colorRoundResults.fold<int>(
+      0,
+      (sum, r) => sum + (r['correct'] as int) + (r['misses'] as int),
+    );
+    if (totalAttempts == 0) return 0;
+    return (totalCorrect / totalAttempts * 100).round();
+  }
+
+  int get colorAverageSortTimeMs {
+    if (colorSortTimes.isEmpty) return 0;
+    return colorSortTimes.reduce((a, b) => a + b) ~/ colorSortTimes.length;
+  }
+
+  int get colorTotalStars {
+    int stars = 0;
+    for (final result in colorRoundResults) {
+      final accuracy =
+          (result['correct'] as int) /
+          ((result['correct'] as int) + (result['misses'] as int));
+      if (accuracy >= 0.9) {
+        stars += 3;
+      } else if (accuracy >= 0.6) {
+        stars += 2;
+      } else {
+        stars += 1;
+      }
+    }
+    return stars;
+  }
+
+  String get reactionRoundLabel =>
+      'Round: $reactionRound / $reactionTotalRounds';
+
+  int get reactionAverageMs {
+    if (reactionTimes.isEmpty) return 0;
+    return reactionTimes.reduce((a, b) => a + b) ~/ reactionTimes.length;
+  }
+
+  bool get isReactionGameComplete =>
+      reactionTimes.length >= reactionTotalRounds;
+
   EmotionQuestion get currentEmotionQuestion =>
       _emotionQuestions[emotionQuestionIndex];
 
-  /// Returns the active color piece selected by the user, if any.
   ColorPiece? get selectedColorPiece {
     if (selectedColorPieceId == null) return null;
     return _colorPieces.firstWhere(
@@ -218,17 +286,7 @@ class AudyController extends ChangeNotifier {
     );
   }
 
-  /// Exposes the current color pieces available for sorting.
   List<ColorPiece> get colorPieces => List.unmodifiable(_colorPieces);
-
-  /// Returns the current reaction score label shown in the UI.
-  String get reactionScoreLabel => 'Score: $reactionScore';
-
-  /// Returns the current reaction miss label shown in the UI.
-  String get reactionMissLabel => 'Misses: $reactionMisses';
-
-  /// Returns the current reaction round label shown in the UI.
-  String get reactionRoundLabel => 'Round: $reactionRound / 10';
 
   /// Returns the number of unlocked achievements derived from local progress.
   int get unlockedAchievementCount =>
@@ -240,7 +298,8 @@ class AudyController extends ChangeNotifier {
       AchievementItem(
         title: 'First Steps',
         description: 'Complete your first game',
-        unlocked: emotionScore > 0 || colorMatches > 0 || reactionScore > 0,
+        unlocked:
+            emotionScore > 0 || colorMatches > 0 || reactionTimes.isNotEmpty,
       ),
       AchievementItem(
         title: 'Emotion Expert',
@@ -249,8 +308,8 @@ class AudyController extends ChangeNotifier {
       ),
       AchievementItem(
         title: 'Quick Reflexes',
-        description: 'Score 90% in Reaction Time',
-        unlocked: reactionScore >= 3 && reactionMisses <= 1,
+        description: 'Average under 300ms in Reaction Time',
+        unlocked: reactionTimes.isNotEmpty && reactionAverageMs < 300,
       ),
       AchievementItem(
         title: 'Color Master',
@@ -354,111 +413,278 @@ class AudyController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Marks a color piece as selected and updates local guidance text.
-  void selectColorPiece(String pieceId) {
-    selectedColorPieceId = pieceId;
-    final piece = selectedColorPiece;
-    colorFeedback = piece == null
-        ? 'Select a shape, then tap a basket.'
-        : 'Selected ${piece.colorName} ${piece.shape.name}.';
-    notifyListeners();
-  }
-
-  /// Attempts to drop the selected piece on a basket and prepares a draft result.
-  void submitColorBasket(String basketColor) {
-    final piece = selectedColorPiece;
-    if (piece == null) {
-      colorFeedback = 'Select a shape before choosing a basket.';
-      notifyListeners();
-      return;
-    }
-
+  void handleColorDrop(ColorPiece piece, String basketColor) {
     final isCorrect =
         piece.colorName.toLowerCase() == basketColor.toLowerCase();
     if (isCorrect) {
       colorMatches += 1;
+      _colorRoundMatches += 1;
       learningPoints += 3;
       _colorPieces.removeWhere((item) => item.id == piece.id);
-      selectedColorPieceId = _colorPieces.isEmpty
-          ? null
-          : _colorPieces.first.id;
-      colorFeedback = 'Correct! ${piece.colorName} matches $basketColor.';
+      _colorFeedback = 'Correct!';
     } else {
       colorMisses += 1;
-      colorFeedback =
-          'Not quite. ${piece.colorName} should not go in $basketColor.';
+      _colorRoundMisses += 1;
+      _colorFeedback = 'Try again.';
     }
-    _prepareRequest(
-      feature: 'color_sorting',
-      endpoint: '/api/games/color-sorting/move',
-      method: RequestMethod.post,
-      payload: {
-        'pieceId': piece.id,
-        'pieceColor': piece.colorName,
-        'basketColor': basketColor,
-        'isCorrect': isCorrect,
-        'matches': colorMatches,
-        'misses': colorMisses,
-      },
-    );
+
+    if (_colorPieces.isEmpty) {
+      _finishColorSortRound();
+    }
+
     notifyListeners();
   }
 
-  /// Starts or advances a reaction round without sending live network traffic.
+  void startColorSortRound() {
+    _colorFeedback = 'Tap a piece, then tap the matching basket.';
+    _colorRoundMatches = 0;
+    _colorRoundMisses = 0;
+    colorRoundComplete = false;
+    _colorSortRoundStartedAt = DateTime.now();
+    _setupColorRound();
+    notifyListeners();
+  }
+
+  void advanceColorSortRound() {
+    colorRoundComplete = false;
+    _colorRoundMatches = 0;
+    _colorRoundMisses = 0;
+    _colorSortRoundStartedAt = DateTime.now();
+    switch (colorCurrentRound) {
+      case ColorSortRound.colorOnly:
+        colorCurrentRound = ColorSortRound.colorAndShape;
+        break;
+      case ColorSortRound.colorAndShape:
+        colorCurrentRound = ColorSortRound.withDistractors;
+        break;
+      case ColorSortRound.withDistractors:
+        return;
+    }
+    _colorFeedback = 'Tap a piece, then tap the matching basket.';
+    _setupColorRound();
+    notifyListeners();
+  }
+
+  void resetColorSortGame() {
+    colorCurrentRound = ColorSortRound.colorOnly;
+    colorMatches = 0;
+    colorMisses = 0;
+    _colorRoundMatches = 0;
+    _colorRoundMisses = 0;
+    colorRoundComplete = false;
+    colorRoundResults.clear();
+    colorSortTimes.clear();
+    colorApiPayload = null;
+    selectedColorPieceId = null;
+    _colorFeedback = 'Tap a piece, then tap the matching basket.';
+    _colorSortRoundStartedAt = null;
+    _setupColorRound();
+    notifyListeners();
+  }
+
+  void _setupColorRound() {
+    switch (colorCurrentRound) {
+      case ColorSortRound.colorOnly:
+        _colorPieces = const [
+          ColorPiece(
+            id: 'r1',
+            colorName: 'Red',
+            shape: SortShape.circle,
+            color: Color(0xFFFF8D91),
+          ),
+          ColorPiece(
+            id: 'b1',
+            colorName: 'Blue',
+            shape: SortShape.circle,
+            color: Color(0xFF8FBCEC),
+          ),
+          ColorPiece(
+            id: 'g1',
+            colorName: 'Green',
+            shape: SortShape.circle,
+            color: Color(0xFF90F48A),
+          ),
+        ];
+        break;
+      case ColorSortRound.colorAndShape:
+        _colorPieces = const [
+          ColorPiece(
+            id: 'r1',
+            colorName: 'Red',
+            shape: SortShape.circle,
+            color: Color(0xFFFF8D91),
+          ),
+          ColorPiece(
+            id: 'b1',
+            colorName: 'Blue',
+            shape: SortShape.square,
+            color: Color(0xFF8FBCEC),
+          ),
+          ColorPiece(
+            id: 'g1',
+            colorName: 'Green',
+            shape: SortShape.triangle,
+            color: Color(0xFF90F48A),
+          ),
+          ColorPiece(
+            id: 'y1',
+            colorName: 'Yellow',
+            shape: SortShape.circle,
+            color: Color(0xFFFFF68C),
+          ),
+        ];
+        break;
+      case ColorSortRound.withDistractors:
+        _colorPieces = const [
+          ColorPiece(
+            id: 'r1',
+            colorName: 'Red',
+            shape: SortShape.circle,
+            color: Color(0xFFFF8D91),
+          ),
+          ColorPiece(
+            id: 'b1',
+            colorName: 'Blue',
+            shape: SortShape.square,
+            color: Color(0xFF8FBCEC),
+          ),
+          ColorPiece(
+            id: 'g1',
+            colorName: 'Green',
+            shape: SortShape.triangle,
+            color: Color(0xFF90F48A),
+          ),
+          ColorPiece(
+            id: 'y1',
+            colorName: 'Yellow',
+            shape: SortShape.circle,
+            color: Color(0xFFFFF68C),
+          ),
+          ColorPiece(
+            id: 'p1',
+            colorName: 'Purple',
+            shape: SortShape.square,
+            color: Color(0xFFDDD0F4),
+          ),
+        ];
+        break;
+    }
+    selectedColorPieceId = _colorPieces.first.id;
+    colorTotalItems = _colorPieces.length;
+  }
+
+  void _finishColorSortRound() {
+    final elapsed = DateTime.now()
+        .difference(_colorSortRoundStartedAt ?? DateTime.now())
+        .inMilliseconds;
+    colorSortTimes.add(elapsed);
+
+    final roundData = {
+      'round': colorCurrentRound.name,
+      'correct': _colorRoundMatches,
+      'misses': _colorRoundMisses,
+      'timeMs': elapsed,
+    };
+    colorRoundResults.add(roundData);
+
+    colorRoundComplete = true;
+
+    _prepareRequest(
+      feature: 'color_sorting',
+      endpoint: '/api/games/color-sorting/round',
+      method: RequestMethod.post,
+      payload: roundData,
+    );
+
+    if (colorRoundResults.length >= 3) {
+      colorApiPayload = {
+        'game': 'color_sorting',
+        'totalRounds': 3,
+        'roundResults': List<Map<String, dynamic>>.from(colorRoundResults),
+        'totalCorrect': colorMatches,
+        'totalMisses': colorMisses,
+        'accuracy': colorTotalAccuracy,
+        'averageTimeMs': colorAverageSortTimeMs,
+        'stars': colorTotalStars,
+        'completedAt': DateTime.now().toIso8601String(),
+      };
+    }
+  }
+
   void startReactionRound() {
-    if (reactionWaitingForSymbol || reactionSymbolVisible) return;
-    reactionWaitingForSymbol = true;
-    reactionFeedback = 'Wait for the symbol, then tap fast.';
-    final delayMs = 600 + _random.nextInt(800);
+    if (reactionState != ReactionGameState.idle) return;
+    reactionState = ReactionGameState.waiting;
+    reactionFeedback = 'Wait for green...';
+    final delayMs = 1000 + _random.nextInt(2000);
     _reactionRoundStartedAt = DateTime.now();
     _reactionRevealTimer?.cancel();
     _reactionRevealTimer = Timer(Duration(milliseconds: delayMs), () {
-      reactionWaitingForSymbol = false;
-      reactionSymbolVisible = true;
-      reactionSymbol = [
-        Icons.auto_awesome_rounded,
-        Icons.star_rounded,
-        Icons.flash_on_rounded,
-      ][_random.nextInt(3)];
+      reactionState = ReactionGameState.ready;
+      reactionFeedback = 'Tap now!';
       notifyListeners();
     });
     notifyListeners();
   }
 
-  /// Handles taps on the reaction surface and prepares a draft result payload.
-  void registerReactionTap() {
-    if (reactionSymbolVisible) {
-      reactionScore += 1;
+  void handleReactionContainerTap() {
+    if (reactionState == ReactionGameState.ready) {
+      final elapsed = DateTime.now()
+          .difference(_reactionRoundStartedAt ?? DateTime.now())
+          .inMilliseconds;
+      currentReactionTimeMs = elapsed;
+      reactionTimes.add(elapsed);
       learningPoints += 4;
-      reactionFeedback = 'Great reaction!';
+      reactionFeedback = '$elapsed ms';
+      reactionState = ReactionGameState.result;
       _prepareRequest(
         feature: 'reaction_time',
         endpoint: '/api/games/reaction-time/round',
         method: RequestMethod.post,
-        payload: {
-          'round': reactionRound,
-          'result': 'success',
-          'latencyMs': DateTime.now()
-              .difference(_reactionRoundStartedAt ?? DateTime.now())
-              .inMilliseconds,
-        },
+        payload: {'round': reactionRound, 'reactionTimeMs': elapsed},
       );
-      _finishReactionRound();
-    } else if (reactionWaitingForSymbol) {
+      notifyListeners();
+    } else if (reactionState == ReactionGameState.waiting) {
       reactionMisses += 1;
-      reactionFeedback = 'Too early. Wait for the symbol.';
+      reactionState = ReactionGameState.tooEarly;
+      reactionFeedback = 'Too early!';
       _prepareRequest(
         feature: 'reaction_time',
         endpoint: '/api/games/reaction-time/round',
         method: RequestMethod.post,
         payload: {'round': reactionRound, 'result': 'too_early'},
       );
-      _finishReactionRound();
-    } else {
+      notifyListeners();
+    } else if (reactionState == ReactionGameState.tooEarly) {
+      reactionState = ReactionGameState.waiting;
+      reactionFeedback = 'Wait for green...';
+      _reactionRoundStartedAt = DateTime.now();
+      final delayMs = 1000 + _random.nextInt(2000);
+      _reactionRevealTimer?.cancel();
+      _reactionRevealTimer = Timer(Duration(milliseconds: delayMs), () {
+        reactionState = ReactionGameState.ready;
+        reactionFeedback = 'Tap now!';
+        notifyListeners();
+      });
+      notifyListeners();
+    } else if (reactionState == ReactionGameState.result) {
+      if (reactionRound >= reactionTotalRounds) {
+        reactionApiPayload = {
+          'game': 'reaction_time',
+          'totalRounds': reactionTotalRounds,
+          'roundTimes': List<int>.from(reactionTimes),
+          'averageTimeMs': reactionAverageMs,
+          'misses': reactionMisses,
+          'completedAt': DateTime.now().toIso8601String(),
+        };
+        reactionState = ReactionGameState.idle;
+      } else {
+        reactionRound += 1;
+        reactionState = ReactionGameState.idle;
+      }
+      notifyListeners();
+    } else if (reactionState == ReactionGameState.idle) {
       startReactionRound();
-      return;
     }
-    notifyListeners();
   }
 
   /// Validates a practice attempt and prepares a backend-ready reading payload.
@@ -609,11 +835,16 @@ class AudyController extends ChangeNotifier {
     super.dispose();
   }
 
-  void _finishReactionRound() {
-    reactionWaitingForSymbol = false;
-    reactionSymbolVisible = false;
-    reactionRound = min(reactionRound + 1, 10);
+  void resetReactionGame() {
+    reactionRound = 1;
+    reactionTimes.clear();
+    reactionMisses = 0;
+    reactionState = ReactionGameState.idle;
+    currentReactionTimeMs = 0;
+    reactionFeedback = 'Tap the container when it turns green.';
+    reactionApiPayload = null;
     _reactionRevealTimer?.cancel();
+    notifyListeners();
   }
 
   void _prepareRequest({
@@ -690,40 +921,7 @@ class AudyController extends ChangeNotifier {
       progressTotal: 3,
     );
 
-    _colorPieces = const [
-      ColorPiece(
-        id: 'red-circle',
-        colorName: 'Red',
-        shape: SortShape.circle,
-        color: Color(0xFFFF8D91),
-      ),
-      ColorPiece(
-        id: 'blue-square',
-        colorName: 'Blue',
-        shape: SortShape.square,
-        color: Color(0xFF8FBCEC),
-      ),
-      ColorPiece(
-        id: 'green-circle',
-        colorName: 'Green',
-        shape: SortShape.circle,
-        color: Color(0xFF90F48A),
-      ),
-      ColorPiece(
-        id: 'red-square',
-        colorName: 'Red',
-        shape: SortShape.square,
-        color: Color(0xFFFF8D91),
-      ),
-      ColorPiece(
-        id: 'blue-triangle',
-        colorName: 'Blue',
-        shape: SortShape.triangle,
-        color: Color(0xFF8FBCEC),
-      ),
-    ].toList();
-
-    selectedColorPieceId = _colorPieces.first.id;
+    _setupColorRound();
 
     socialMessages.addAll([
       SocialMessage(

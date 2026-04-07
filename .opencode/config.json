@@ -1,9 +1,15 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "zen/qwen3.6-plus",
-  "context": ["./agent.md"],
+  "context": ["../../agent.md"],
   "permission": "allow",
   "experimental": {
     "disable_paste_summary": true
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\User\\Desktop\\AUDY"]
+    }
   }
 }

@@ -28,11 +28,11 @@ class GamesHubPage extends StatelessWidget {
         AppRoutes.miniPuzzle,
       ),
       _RouteCard(
-        'Color Sorting',
-        'Match by color',
-        Icons.palette_outlined,
+        'Sorting Game',
+        'Sort & learn',
+        Icons.sort_rounded,
         const Color(0xFFFFF3A6),
-        AppRoutes.colorSorting,
+        AppRoutes.sortingGame,
       ),
       _RouteCard(
         'Reaction Time',
@@ -650,18 +650,37 @@ class _FinalScoreScreen extends StatelessWidget {
   }
 }
 
-class ColorSortingPage extends StatelessWidget {
+class ColorSortingPage extends StatefulWidget {
   const ColorSortingPage({super.key});
+
+  @override
+  State<ColorSortingPage> createState() => _ColorSortingPageState();
+}
+
+class _ColorSortingPageState extends State<ColorSortingPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = AudyScope.of(context);
+      controller.resetColorSortGame();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = AudyScope.of(context);
-    final baskets = [
-      _BasketData('Red', const Color(0xFFFF8D91)),
-      _BasketData('Blue', const Color(0xFF8FBCEC)),
-      _BasketData('Yellow', const Color(0xFFFFF68C)),
-      _BasketData('Green', const Color(0xFF90F48A)),
-    ];
+
+    if (controller.isColorSortComplete) {
+      return ColorSortResultPage(controller: controller);
+    }
+
+    if (controller.colorRoundComplete) {
+      return _ColorSortRoundOverlay(controller: controller);
+    }
+
+    final pieces = controller.colorPieces;
+    final baskets = pieces.map((p) => p.colorName).toSet().toList();
 
     return AudyResponsivePage(
       builder: (context, adaptive) {
@@ -671,13 +690,7 @@ class ColorSortingPage extends StatelessWidget {
             _TopRow(
               adaptive: adaptive,
               leadingLabel: 'Back to Home',
-              trailing: AudyPillButton(
-                label: 'Hint',
-                icon: Icons.lightbulb_outline_rounded,
-                color: const Color(0xFFFFF2A8),
-                adaptive: adaptive,
-                onPressed: () {},
-              ),
+              trailingText: controller.colorRoundLabel,
             ),
             SizedBox(height: adaptive.space(24)),
             Center(
@@ -693,82 +706,99 @@ class ColorSortingPage extends StatelessWidget {
                   ),
                   SizedBox(height: adaptive.space(8)),
                   Text(
-                    'Tap a shape, then tap the matching color basket.',
+                    'Drag each piece to the matching basket.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: adaptive.space(15),
                       color: const Color(0xFF617691),
                     ),
                   ),
-                  SizedBox(height: adaptive.space(12)),
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        fontSize: adaptive.space(15),
-                        color: const Color(0xFF617691),
-                      ),
-                      children: [
-                        const TextSpan(text: 'Selected: '),
-                        TextSpan(
-                          text:
-                              controller.selectedColorPiece?.colorName ??
-                              'None',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF243A5A),
-                          ),
-                        ),
-                        TextSpan(
-                          text:
-                              ' (${controller.selectedColorPiece?.shape.name ?? 'none'})',
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
-            SizedBox(height: adaptive.space(22)),
+            SizedBox(height: adaptive.space(18)),
             AudyPanel(
               adaptive: adaptive,
               child: Column(
                 children: [
                   Text(
-                    'Tap from here:',
+                    'Drag from here:',
                     style: TextStyle(
-                      fontSize: adaptive.space(18),
+                      fontSize: adaptive.space(16),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: adaptive.space(18)),
+                  SizedBox(height: adaptive.space(14)),
                   Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: adaptive.space(18),
-                    runSpacing: adaptive.space(18),
-                    children: controller.colorPieces.map((piece) {
-                      final isSelected =
-                          controller.selectedColorPieceId == piece.id;
+                    spacing: adaptive.space(16),
+                    runSpacing: adaptive.space(16),
+                    children: pieces.map((piece) {
                       if (piece.shape == SortShape.triangle) {
-                        return _TriangleChip(
-                          color: piece.color,
-                          selected: isSelected,
-                          onTap: () => controller.selectColorPiece(piece.id),
+                        return Draggable<ColorPiece>(
+                          data: piece,
+                          feedback: Material(
+                            color: Colors.transparent,
+                            child: _TriangleChip(
+                              color: piece.color,
+                              selected: false,
+                              onTap: null,
+                            ),
+                          ),
+                          childWhenDragging: Opacity(
+                            opacity: 0.3,
+                            child: _TriangleChip(
+                              color: piece.color,
+                              selected: false,
+                              onTap: null,
+                            ),
+                          ),
+                          child: _TriangleChip(
+                            color: piece.color,
+                            selected: false,
+                            onTap: null,
+                          ),
                         );
                       }
-                      return _ShapeChip(
-                        shape: piece.shape == SortShape.circle
-                            ? BoxShape.circle
-                            : BoxShape.rectangle,
-                        color: piece.color,
-                        selected: isSelected,
-                        onTap: () => controller.selectColorPiece(piece.id),
+                      return Draggable<ColorPiece>(
+                        data: piece,
+                        feedback: Material(
+                          color: Colors.transparent,
+                          child: _ShapeChip(
+                            shape: piece.shape == SortShape.circle
+                                ? BoxShape.circle
+                                : BoxShape.rectangle,
+                            color: piece.color,
+                            selected: false,
+                            onTap: null,
+                          ),
+                        ),
+                        childWhenDragging: Opacity(
+                          opacity: 0.3,
+                          child: _ShapeChip(
+                            shape: piece.shape == SortShape.circle
+                                ? BoxShape.circle
+                                : BoxShape.rectangle,
+                            color: piece.color,
+                            selected: false,
+                            onTap: null,
+                          ),
+                        ),
+                        child: _ShapeChip(
+                          shape: piece.shape == SortShape.circle
+                              ? BoxShape.circle
+                              : BoxShape.rectangle,
+                          color: piece.color,
+                          selected: false,
+                          onTap: null,
+                        ),
                       );
                     }).toList(),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: adaptive.space(22)),
+            SizedBox(height: adaptive.space(18)),
             AudyAdaptiveGrid(
               adaptive: adaptive,
               phoneColumns: 2,
@@ -776,11 +806,12 @@ class ColorSortingPage extends StatelessWidget {
               desktopColumns: 4,
               items: baskets
                   .map(
-                    (basket) => _ColorBasketCard(
-                      label: basket.label,
-                      color: basket.color,
+                    (basket) => _ColorBasketDropTarget(
+                      label: basket,
+                      color: _basketColorFor(basket),
                       adaptive: adaptive,
-                      onTap: () => controller.submitColorBasket(basket.label),
+                      onDrop: (piece) =>
+                          controller.handleColorDrop(piece, basket),
                     ),
                   )
                   .toList(),
@@ -803,6 +834,353 @@ class ColorSortingPage extends StatelessWidget {
   }
 }
 
+Color _basketColorFor(String name) {
+  switch (name.toLowerCase()) {
+    case 'red':
+      return const Color(0xFFFF8D91);
+    case 'blue':
+      return const Color(0xFF8FBCEC);
+    case 'yellow':
+      return const Color(0xFFFFF68C);
+    case 'green':
+      return const Color(0xFF90F48A);
+    case 'purple':
+      return const Color(0xFFDDD0F4);
+    default:
+      return const Color(0xFFE7D8FA);
+  }
+}
+
+class _ColorSortRoundOverlay extends StatelessWidget {
+  const _ColorSortRoundOverlay({required this.controller});
+
+  final AudyController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AudyResponsivePage(
+      builder: (context, adaptive) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TopRow(adaptive: adaptive, leadingLabel: 'Back to Home'),
+            SizedBox(height: adaptive.space(24)),
+            Center(
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 80,
+                    color: AudyColors.mintGreen,
+                  ),
+                  SizedBox(height: adaptive.space(16)),
+                  Text('Round Complete!', style: AudyTypography.displayLarge),
+                  SizedBox(height: adaptive.space(24)),
+                  AudyPanel(
+                    adaptive: adaptive,
+                    child: Column(
+                      children: [
+                        Text(
+                          controller.colorRoundLabel,
+                          style: TextStyle(
+                            fontSize: adaptive.space(18),
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF617691),
+                          ),
+                        ),
+                        SizedBox(height: adaptive.space(12)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _StatBlock(
+                              label: 'Correct',
+                              value:
+                                  '${controller.colorRoundResults.last['correct']}',
+                              color: AudyColors.mintGreen,
+                            ),
+                            _StatBlock(
+                              label: 'Misses',
+                              value:
+                                  '${controller.colorRoundResults.last['misses']}',
+                              color: AudyColors.error,
+                            ),
+                            _StatBlock(
+                              label: 'Time',
+                              value:
+                                  '${controller.colorRoundResults.last['timeMs']} ms',
+                              color: AudyColors.skyBlue,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () => controller.advanceColorSortRound(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AudyColors.skyBlue,
+                foregroundColor: AudyColors.textOnColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
+                ),
+                elevation: 4,
+                minimumSize: const Size(
+                  double.infinity,
+                  AudySpacing.buttonHeight,
+                ),
+              ),
+              child: Text(
+                controller.isColorSortComplete ? 'See Results' : 'Next Round',
+                style: AudyTypography.buttonText,
+              ),
+            ),
+            SizedBox(height: adaptive.space(16)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StatBlock extends StatelessWidget {
+  const _StatBlock({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF617691),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ColorSortResultPage extends StatelessWidget {
+  const ColorSortResultPage({required this.controller, super.key});
+
+  final AudyController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AudyResponsivePage(
+      builder: (context, adaptive) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TopRow(adaptive: adaptive, leadingLabel: 'Back to Home'),
+            SizedBox(height: adaptive.space(24)),
+            Center(
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.celebration_rounded,
+                    size: 80,
+                    color: AudyColors.mintGreen,
+                  ),
+                  SizedBox(height: adaptive.space(12)),
+                  Text('All Done!', style: AudyTypography.displayLarge),
+                  SizedBox(height: adaptive.space(8)),
+                  Text(
+                    'You completed all 3 rounds!',
+                    style: TextStyle(
+                      fontSize: adaptive.space(15),
+                      color: const Color(0xFF617691),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: adaptive.space(24)),
+            AudyPanel(
+              adaptive: adaptive,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(9, (index) {
+                      final filled = index < controller.colorTotalStars;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 36,
+                          color: filled
+                              ? AudyColors.starGold
+                              : AudyColors.starSilver,
+                        ),
+                      );
+                    }),
+                  ),
+                  SizedBox(height: adaptive.space(12)),
+                  Text(
+                    'Accuracy: ${controller.colorTotalAccuracy}%',
+                    style: TextStyle(
+                      fontSize: adaptive.space(22),
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF243A5A),
+                    ),
+                  ),
+                  SizedBox(height: adaptive.space(4)),
+                  Text(
+                    'Avg: ${controller.colorAverageSortTimeMs} ms',
+                    style: TextStyle(
+                      fontSize: adaptive.space(14),
+                      color: const Color(0xFF617691),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: adaptive.space(20)),
+            AudyPanel(
+              adaptive: adaptive,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Round Breakdown',
+                    style: TextStyle(
+                      fontSize: adaptive.space(18),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF243A5A),
+                    ),
+                  ),
+                  SizedBox(height: adaptive.space(12)),
+                  ...List.generate(controller.colorRoundResults.length, (i) {
+                    final result = controller.colorRoundResults[i];
+                    final roundNames = [
+                      'Round 1: Color',
+                      'Round 2: Color & Shape',
+                      'Round 3: With Fakes',
+                    ];
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: adaptive.space(10)),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              roundNames[i],
+                              style: TextStyle(
+                                fontSize: adaptive.space(14),
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF617691),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${result['correct']}/${(result['correct'] as int) + (result['misses'] as int)}',
+                            style: TextStyle(
+                              fontSize: adaptive.space(14),
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF243A5A),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '${result['timeMs']} ms',
+                            style: TextStyle(
+                              fontSize: adaptive.space(14),
+                              fontWeight: FontWeight.w700,
+                              color: AudyColors.skyBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  if (controller.colorMisses > 0)
+                    Padding(
+                      padding: EdgeInsets.only(top: adaptive.space(8)),
+                      child: Text(
+                        'Total misses: ${controller.colorMisses}',
+                        style: TextStyle(
+                          fontSize: adaptive.space(14),
+                          color: AudyColors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      controller.resetColorSortGame();
+                      controller.startColorSortRound();
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AudyColors.skyBlue,
+                      foregroundColor: AudyColors.textOnColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AudySpacing.radiusXLarge,
+                        ),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: Text('Play Again', style: AudyTypography.buttonText),
+                  ),
+                ),
+                const SizedBox(width: AudySpacing.elementGap),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AudyColors.mintGreen,
+                      foregroundColor: AudyColors.textOnColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AudySpacing.radiusXLarge,
+                        ),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: Text('Done', style: AudyTypography.buttonText),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: adaptive.space(16)),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class ReactionTimePage extends StatelessWidget {
   const ReactionTimePage({super.key});
 
@@ -810,8 +1188,51 @@ class ReactionTimePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = AudyScope.of(context);
 
+    if (controller.isReactionGameComplete) {
+      return ReactionTimeResultPage(controller: controller);
+    }
+
     return AudyResponsivePage(
       builder: (context, adaptive) {
+        Color containerColor;
+        IconData containerIcon;
+        Color iconColor;
+        String topText;
+
+        final state = controller.reactionState;
+        switch (state) {
+          case ReactionGameState.idle:
+            containerColor = const Color(0xFFBDD8F2);
+            containerIcon = Icons.bolt_rounded;
+            iconColor = const Color(0xFF243A5A);
+            topText = 'Tap to start';
+            break;
+          case ReactionGameState.waiting:
+            containerColor = const Color(0xFFFF8D91);
+            containerIcon = Icons.hourglass_empty_rounded;
+            iconColor = Colors.white;
+            topText = 'Wait...';
+            break;
+          case ReactionGameState.ready:
+            containerColor = const Color(0xFF69E0A0);
+            containerIcon = Icons.touch_app_rounded;
+            iconColor = Colors.white;
+            topText = 'Tap now!';
+            break;
+          case ReactionGameState.tooEarly:
+            containerColor = const Color(0xFFFF5252);
+            containerIcon = Icons.cancel_rounded;
+            iconColor = Colors.white;
+            topText = 'Too early!';
+            break;
+          case ReactionGameState.result:
+            containerColor = const Color(0xFFBDD8F2);
+            containerIcon = Icons.timer_rounded;
+            iconColor = const Color(0xFF243A5A);
+            topText = '${controller.currentReactionTimeMs} ms';
+            break;
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -834,7 +1255,7 @@ class ReactionTimePage extends StatelessWidget {
                   ),
                   SizedBox(height: adaptive.space(8)),
                   Text(
-                    'Tap the symbols as quickly as you can.',
+                    'Tap the container when it turns green.',
                     style: TextStyle(
                       fontSize: adaptive.space(15),
                       color: const Color(0xFF617691),
@@ -844,64 +1265,43 @@ class ReactionTimePage extends StatelessWidget {
               ),
             ),
             SizedBox(height: adaptive.space(20)),
-            AudyPanel(
-              adaptive: adaptive,
-              padding: EdgeInsets.symmetric(
-                horizontal: adaptive.space(22),
-                vertical: adaptive.space(16),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      controller.reactionScoreLabel,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: adaptive.space(18),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      controller.reactionMissLabel,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: adaptive.space(18),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+            Center(
+              child: Text(
+                topText,
+                style: TextStyle(
+                  fontSize: adaptive.space(32),
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF243A5A),
+                ),
               ),
             ),
-            SizedBox(height: adaptive.space(20)),
-            InkWell(
-              onTap: controller.registerReactionTap,
-              borderRadius: BorderRadius.circular(adaptive.space(28)),
-              child: Container(
-                width: double.infinity,
-                constraints: BoxConstraints(
-                  minHeight: adaptive.isPhone ? 260 : 420,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4FF),
-                  borderRadius: BorderRadius.circular(adaptive.space(28)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF99A9C0).withValues(alpha: 0.15),
-                      blurRadius: 22,
-                      offset: const Offset(0, 12),
+            SizedBox(height: adaptive.space(16)),
+            SizedBox(
+              height: adaptive.isPhone ? 260 : 420,
+              child: InkWell(
+                onTap: controller.handleReactionContainerTap,
+                borderRadius: BorderRadius.circular(adaptive.space(28)),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: containerColor,
+                    borderRadius: BorderRadius.circular(adaptive.space(28)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF99A9C0).withValues(alpha: 0.15),
+                        blurRadius: 22,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(
+                      containerIcon,
+                      size: adaptive.isPhone ? 72 : 96,
+                      color: iconColor,
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(
-                    controller.reactionSymbolVisible
-                        ? controller.reactionSymbol
-                        : Icons.touch_app_rounded,
-                    size: adaptive.isPhone ? 56 : 76,
-                    color: const Color(0xFFFFB14F),
                   ),
                 ),
               ),
@@ -917,15 +1317,172 @@ class ReactionTimePage extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: adaptive.space(12)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class ReactionTimeResultPage extends StatelessWidget {
+  const ReactionTimeResultPage({required this.controller, super.key});
+
+  final AudyController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AudyResponsivePage(
+      builder: (context, adaptive) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TopRow(adaptive: adaptive, leadingLabel: 'Back to Home'),
+            SizedBox(height: adaptive.space(24)),
             Center(
-              child: AudyPillButton(
-                label: 'Start Round',
-                color: const Color(0xFFBDD8F2),
-                adaptive: adaptive,
-                onPressed: controller.startReactionRound,
+              child: Column(
+                children: [
+                  Text(
+                    'Reaction Time',
+                    style: TextStyle(
+                      fontSize: adaptive.space(28),
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF243A5A),
+                    ),
+                  ),
+                  SizedBox(height: adaptive.space(8)),
+                  Text(
+                    'Great job completing all rounds!',
+                    style: TextStyle(
+                      fontSize: adaptive.space(15),
+                      color: const Color(0xFF617691),
+                    ),
+                  ),
+                ],
               ),
             ),
+            SizedBox(height: adaptive.space(24)),
+            AudyPanel(
+              adaptive: adaptive,
+              child: Column(
+                children: [
+                  Text(
+                    'Average',
+                    style: TextStyle(
+                      fontSize: adaptive.space(18),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF617691),
+                    ),
+                  ),
+                  SizedBox(height: adaptive.space(8)),
+                  Text(
+                    '${controller.reactionAverageMs} ms',
+                    style: TextStyle(
+                      fontSize: adaptive.space(56),
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF243A5A),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: adaptive.space(20)),
+            AudyPanel(
+              adaptive: adaptive,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Round Times',
+                    style: TextStyle(
+                      fontSize: adaptive.space(18),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF243A5A),
+                    ),
+                  ),
+                  SizedBox(height: adaptive.space(12)),
+                  ...List.generate(controller.reactionTimes.length, (i) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: adaptive.space(8)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Round ${i + 1}',
+                            style: TextStyle(
+                              fontSize: adaptive.space(16),
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF617691),
+                            ),
+                          ),
+                          Text(
+                            '${controller.reactionTimes[i]} ms',
+                            style: TextStyle(
+                              fontSize: adaptive.space(16),
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF243A5A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  if (controller.reactionMisses > 0)
+                    Padding(
+                      padding: EdgeInsets.only(top: adaptive.space(8)),
+                      child: Text(
+                        'Too early taps: ${controller.reactionMisses}',
+                        style: TextStyle(
+                          fontSize: adaptive.space(14),
+                          color: AudyColors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(height: adaptive.space(32)),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      controller.resetReactionGame();
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AudyColors.skyBlue,
+                      foregroundColor: AudyColors.textOnColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AudySpacing.radiusXLarge,
+                        ),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: Text('Play Again', style: AudyTypography.buttonText),
+                  ),
+                ),
+                const SizedBox(width: AudySpacing.elementGap),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AudyColors.mintGreen,
+                      foregroundColor: AudyColors.textOnColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AudySpacing.radiusXLarge,
+                        ),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: Text('Done', style: AudyTypography.buttonText),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: adaptive.space(16)),
           ],
         );
       },
@@ -1136,13 +1693,11 @@ class _TopRow extends StatelessWidget {
     required this.adaptive,
     required this.leadingLabel,
     this.trailingText,
-    this.trailing,
   });
 
   final AudyAdaptive adaptive;
   final String leadingLabel;
   final String? trailingText;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -1155,8 +1710,7 @@ class _TopRow extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        ...(trailing == null ? const <Widget>[] : <Widget>[trailing!]),
-        if (trailing == null && trailingText != null)
+        if (trailingText != null)
           Text(
             trailingText!,
             style: TextStyle(
@@ -1267,46 +1821,53 @@ class _TrianglePainter extends CustomPainter {
   }
 }
 
-class _ColorBasketCard extends StatelessWidget {
-  const _ColorBasketCard({
+class _ColorBasketDropTarget extends StatelessWidget {
+  const _ColorBasketDropTarget({
     required this.label,
     required this.color,
     required this.adaptive,
-    required this.onTap,
+    required this.onDrop,
   });
 
   final String label;
   final Color color;
   final AudyAdaptive adaptive;
-  final VoidCallback onTap;
+  final void Function(ColorPiece piece) onDrop;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(adaptive.space(24)),
-      child: Container(
-        height: adaptive.isPhone ? 150 : 200,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(adaptive.space(24)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFA5B4C7).withValues(alpha: 0.20),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
+    return SizedBox(
+      height: adaptive.isPhone ? 150 : 200,
+      child: DragTarget<ColorPiece>(
+        onAcceptWithDetails: (details) => onDrop(details.data),
+        builder: (context, candidateData, rejectedData) {
+          final isHovering = candidateData.isNotEmpty;
+          return Container(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(adaptive.space(24)),
+              border: isHovering
+                  ? Border.all(color: Colors.white, width: 4)
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFA5B4C7).withValues(alpha: 0.20),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: adaptive.space(18),
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF243A5A),
-          ),
-        ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: adaptive.space(18),
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF243A5A),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1353,11 +1914,4 @@ class _RouteCard {
   final IconData icon;
   final Color color;
   final String route;
-}
-
-class _BasketData {
-  const _BasketData(this.label, this.color);
-
-  final String label;
-  final Color color;
 }
