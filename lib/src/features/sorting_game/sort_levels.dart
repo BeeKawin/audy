@@ -47,7 +47,7 @@ class SortLevelDefinitions {
             id: 'cat_1',
             label: 'Cat',
             icon: Icons.pets_rounded,
-            categoryId: 'house',
+            categoryId: 'land',
             color: Color(0xFFFFDAC7),
           ),
           SortItem(
@@ -67,10 +67,10 @@ class SortLevelDefinitions {
         ],
         categories: [
           SortCategory(
-            id: 'house',
-            label: 'House',
-            icon: Icons.home_rounded,
-            color: Color(0xFFFFDAC7),
+            id: 'land',
+            label: 'Land',
+            icon: Icons.grass,
+            color: Color.fromRGBO(59, 211, 54, 1),
           ),
           SortCategory(
             id: 'water',
@@ -93,7 +93,7 @@ class SortLevelDefinitions {
             id: 'dog_2',
             label: 'Dog',
             icon: Icons.pets_rounded,
-            categoryId: 'house',
+            categoryId: 'land',
             color: Color(0xFFFFDAC7),
           ),
           SortItem(
@@ -114,16 +114,16 @@ class SortLevelDefinitions {
             id: 'rabbit_2',
             label: 'Rabbit',
             icon: Icons.pets_rounded,
-            categoryId: 'house',
+            categoryId: 'land',
             color: Color(0xFFFFDAC7),
           ),
         ],
         categories: [
           SortCategory(
-            id: 'house',
-            label: 'House',
-            icon: Icons.home_rounded,
-            color: Color(0xFFFFDAC7),
+            id: 'land',
+            label: 'Land',
+            icon: Icons.grass,
+            color: Color.fromRGBO(59, 211, 54, 1),
           ),
           SortCategory(
             id: 'water',

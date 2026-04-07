@@ -1,9 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
 
-/// A single sortable item card that can be tapped to select.
+class _Responsive {
+  static const double maxWidth = 420.0;
+  static double sp(double width) => width.clamp(0.0, maxWidth);
+}
+
 class SortItemCard extends StatefulWidget {
   const SortItemCard({
     super.key,
@@ -61,6 +65,8 @@ class _SortItemCardState extends State<SortItemCard>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
     final cardColor = widget.item.color ?? AudyColors.skyBlue;
     final borderColor = widget.isHinted
         ? AudyColors.starGold
@@ -77,7 +83,7 @@ class _SortItemCardState extends State<SortItemCard>
         scale: _scaleAnimation,
         child: AnimatedContainer(
           duration: AudyAnimation.normal,
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(effectiveWidth * 0.02),
           decoration: BoxDecoration(
             color: AudyColors.backgroundCard,
             borderRadius: BorderRadius.circular(AudySpacing.radiusLarge),
@@ -97,8 +103,10 @@ class _SortItemCardState extends State<SortItemCard>
               final availableWidth = constraints.maxWidth;
               final availableHeight = constraints.maxHeight;
               final iconSize = (availableWidth * 0.4).clamp(28.0, 60.0);
-              final maxIconSize = (availableHeight - 30).clamp(28.0, 60.0);
-              final finalIconSize = iconSize < maxIconSize ? iconSize : maxIconSize;
+              final maxIconSize = (availableHeight * 0.6).clamp(28.0, 60.0);
+              final finalIconSize = iconSize < maxIconSize
+                  ? iconSize
+                  : maxIconSize;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -118,12 +126,14 @@ class _SortItemCardState extends State<SortItemCard>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: effectiveWidth * 0.01),
                   Flexible(
                     child: Text(
                       widget.item.label,
                       textAlign: TextAlign.center,
-                      style: AudyTypography.labelMedium.copyWith(fontSize: 12),
+                      style: AudyTypography.labelMedium.copyWith(
+                        fontSize: (effectiveWidth * 0.035).clamp(12.0, 16.0),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -138,7 +148,6 @@ class _SortItemCardState extends State<SortItemCard>
   }
 }
 
-/// A category drop target (basket/bin) for sorting items.
 class SortCategoryTarget extends StatelessWidget {
   const SortCategoryTarget({
     super.key,
@@ -155,13 +164,15 @@ class SortCategoryTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
     final catColor = category.color ?? AudyColors.skyBlue;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: AudyAnimation.normal,
-        padding: const EdgeInsets.all(AudySpacing.cardPadding),
+        padding: EdgeInsets.all(effectiveWidth * 0.04),
         decoration: BoxDecoration(
           color: catColor.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(AudySpacing.radiusLarge),
@@ -184,8 +195,10 @@ class SortCategoryTarget extends StatelessWidget {
             final availableWidth = constraints.maxWidth;
             final availableHeight = constraints.maxHeight;
             final iconSize = (availableWidth * 0.4).clamp(28.0, 60.0);
-            final maxIconSize = (availableHeight - 40).clamp(28.0, 60.0);
-            final finalIconSize = iconSize < maxIconSize ? iconSize : maxIconSize;
+            final maxIconSize = (availableHeight * 0.5).clamp(28.0, 60.0);
+            final finalIconSize = iconSize < maxIconSize
+                ? iconSize
+                : maxIconSize;
             return Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -205,22 +218,24 @@ class SortCategoryTarget extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: effectiveWidth * 0.01),
                 Flexible(
                   child: Text(
                     category.label,
                     textAlign: TextAlign.center,
-                    style: AudyTypography.labelMedium.copyWith(fontSize: 12),
+                    style: AudyTypography.labelMedium.copyWith(
+                      fontSize: (effectiveWidth * 0.035).clamp(12.0, 16.0),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (itemCount > 0) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: effectiveWidth * 0.01),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: effectiveWidth * 0.02,
+                      vertical: effectiveWidth * 0.005,
                     ),
                     decoration: BoxDecoration(
                       color: catColor,
@@ -228,8 +243,8 @@ class SortCategoryTarget extends StatelessWidget {
                     ),
                     child: Text(
                       '$itemCount',
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: TextStyle(
+                        fontSize: (effectiveWidth * 0.03).clamp(10.0, 14.0),
                         fontWeight: FontWeight.w700,
                         color: AudyColors.textOnColor,
                       ),
@@ -245,7 +260,6 @@ class SortCategoryTarget extends StatelessWidget {
   }
 }
 
-/// ABA feedback overlay that shows positive reinforcement or gentle correction.
 class ABAGameFeedbackOverlay extends StatelessWidget {
   const ABAGameFeedbackOverlay({
     super.key,
@@ -258,13 +272,16 @@ class ABAGameFeedbackOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
+
     return AnimatedOpacity(
       duration: AudyAnimation.normal,
       opacity: 1.0,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AudySpacing.cardPadding,
-          vertical: AudySpacing.elementGap,
+        padding: EdgeInsets.symmetric(
+          horizontal: effectiveWidth * 0.05,
+          vertical: effectiveWidth * 0.03,
         ),
         decoration: BoxDecoration(
           color: isCorrect
@@ -273,20 +290,21 @@ class ABAGameFeedbackOverlay extends StatelessWidget {
           borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
           boxShadow: AudyShadows.cardShadow,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: effectiveWidth * 0.02,
           children: [
             Icon(
               isCorrect ? Icons.check_circle_rounded : Icons.info_rounded,
-              size: AudySpacing.iconMedium,
+              size: (effectiveWidth * 0.08).clamp(24.0, 48.0),
               color: AudyColors.textOnColor,
             ),
-            const SizedBox(width: AudySpacing.smallGap),
             Flexible(
               child: Text(
                 message,
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: (effectiveWidth * 0.05).clamp(16.0, 24.0),
                   fontWeight: FontWeight.w700,
                   color: AudyColors.textPrimary,
                 ),
@@ -300,7 +318,6 @@ class ABAGameFeedbackOverlay extends StatelessWidget {
   }
 }
 
-/// Star reward display with animation.
 class StarRewardDisplay extends StatelessWidget {
   const StarRewardDisplay({
     super.key,
@@ -336,7 +353,6 @@ class StarRewardDisplay extends StatelessWidget {
   }
 }
 
-/// Progress indicator showing current round and total rounds.
 class SortGameProgress extends StatelessWidget {
   const SortGameProgress({
     super.key,
@@ -351,8 +367,14 @@ class SortGameProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
+
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      runAlignment: WrapAlignment.center,
+      spacing: effectiveWidth * 0.02,
+      runSpacing: effectiveWidth * 0.01,
       children: [
         Text(
           'Round $currentRound / $totalRounds',

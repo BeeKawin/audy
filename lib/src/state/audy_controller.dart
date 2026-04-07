@@ -3,8 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-enum ReadingModule { letters, words, sentences }
-
 enum SortShape { circle, square, triangle }
 
 enum RequestMethod { get, post, put }
@@ -12,6 +10,43 @@ enum RequestMethod { get, post, put }
 enum ReactionGameState { idle, waiting, ready, tooEarly, result }
 
 enum ColorSortRound { colorOnly, colorAndShape, withDistractors }
+
+class ColorPiece {
+  const ColorPiece({
+    required this.id,
+    required this.colorName,
+    required this.shape,
+    required this.color,
+  });
+
+  final String id;
+  final String colorName;
+  final SortShape shape;
+  final Color color;
+}
+
+class AccessoryItem {
+  const AccessoryItem({
+    required this.name,
+    required this.icon,
+    required this.cost,
+    required this.owned,
+  });
+
+  final String name;
+  final IconData icon;
+  final int cost;
+  final bool owned;
+
+  AccessoryItem copyWith({bool? owned}) {
+    return AccessoryItem(
+      name: name,
+      icon: icon,
+      cost: cost,
+      owned: owned ?? this.owned,
+    );
+  }
+}
 
 class ColorSortRoundData {
   const ColorSortRoundData({
@@ -73,75 +108,6 @@ class EmotionQuestion {
   final IconData icon;
 }
 
-class ReadingPracticeState {
-  const ReadingPracticeState({
-    required this.prompt,
-    required this.progressCurrent,
-    required this.progressTotal,
-    this.lastAttempt = '',
-    this.feedback = 'Tap Listen, then say it clearly.',
-  });
-
-  final String prompt;
-  final int progressCurrent;
-  final int progressTotal;
-  final String lastAttempt;
-  final String feedback;
-
-  ReadingPracticeState copyWith({
-    String? prompt,
-    int? progressCurrent,
-    int? progressTotal,
-    String? lastAttempt,
-    String? feedback,
-  }) {
-    return ReadingPracticeState(
-      prompt: prompt ?? this.prompt,
-      progressCurrent: progressCurrent ?? this.progressCurrent,
-      progressTotal: progressTotal ?? this.progressTotal,
-      lastAttempt: lastAttempt ?? this.lastAttempt,
-      feedback: feedback ?? this.feedback,
-    );
-  }
-}
-
-class ColorPiece {
-  const ColorPiece({
-    required this.id,
-    required this.colorName,
-    required this.shape,
-    required this.color,
-  });
-
-  final String id;
-  final String colorName;
-  final SortShape shape;
-  final Color color;
-}
-
-class AccessoryItem {
-  const AccessoryItem({
-    required this.name,
-    required this.icon,
-    required this.cost,
-    required this.owned,
-  });
-
-  final String name;
-  final IconData icon;
-  final int cost;
-  final bool owned;
-
-  AccessoryItem copyWith({bool? owned}) {
-    return AccessoryItem(
-      name: name,
-      icon: icon,
-      cost: cost,
-      owned: owned ?? this.owned,
-    );
-  }
-}
-
 class AchievementItem {
   const AchievementItem({
     required this.title,
@@ -162,7 +128,6 @@ class AudyController extends ChangeNotifier {
   final Random _random = Random();
 
   late final List<EmotionQuestion> _emotionQuestions;
-  late final Map<ReadingModule, List<String>> _readingPrompts;
   late List<ColorPiece> _colorPieces;
 
   final List<PreparedRequest> preparedRequests = [];
@@ -199,8 +164,6 @@ class AudyController extends ChangeNotifier {
   int currentReactionTimeMs = 0;
   String reactionFeedback = 'Tap the container when it turns green.';
   Map<String, dynamic>? reactionApiPayload;
-
-  final Map<ReadingModule, ReadingPracticeState> readingStates = {};
 
   final List<SocialMessage> socialMessages = [];
   double socialConfidence = 0.20;
@@ -288,11 +251,9 @@ class AudyController extends ChangeNotifier {
 
   List<ColorPiece> get colorPieces => List.unmodifiable(_colorPieces);
 
-  /// Returns the number of unlocked achievements derived from local progress.
   int get unlockedAchievementCount =>
       achievements.where((achievement) => achievement.unlocked).length;
 
-  /// Returns the profile achievements list derived from current state.
   List<AchievementItem> get achievements {
     return [
       AchievementItem(
@@ -317,16 +278,6 @@ class AudyController extends ChangeNotifier {
         unlocked: colorMatches >= 3 && colorMisses == 0,
       ),
       AchievementItem(
-        title: 'Reading Star',
-        description: 'Complete 20 reading sessions',
-        unlocked:
-            readingStates.values.fold<int>(
-              0,
-              (sum, state) => sum + state.progressCurrent,
-            ) >=
-            20,
-      ),
-      AchievementItem(
         title: 'Social Butterfly',
         description: 'Have 10 conversations',
         unlocked:
@@ -335,7 +286,6 @@ class AudyController extends ChangeNotifier {
     ];
   }
 
-  /// Validates and submits an emotion answer without sending it to a backend.
   void submitEmotionAnswer(String answer) {
     final isCorrect = answer == currentEmotionQuestion.correctAnswer;
     emotionFeedback = isCorrect
@@ -399,17 +349,6 @@ class AudyController extends ChangeNotifier {
 
   void recordEmotionGamePlay() {
     gamesPlayed += 1;
-    notifyListeners();
-  }
-
-  /// Creates a draft backend request representing an audio playback intent.
-  void prepareAudioPrompt(String feature, String prompt) {
-    _prepareRequest(
-      feature: feature,
-      endpoint: '/api/audio/play',
-      method: RequestMethod.post,
-      payload: {'prompt': prompt, 'voice': 'friendly-guide'},
-    );
     notifyListeners();
   }
 
@@ -687,54 +626,6 @@ class AudyController extends ChangeNotifier {
     }
   }
 
-  /// Validates a practice attempt and prepares a backend-ready reading payload.
-  void submitReadingAttempt(ReadingModule module, String attempt) {
-    final error = validatePracticeInput(attempt);
-    final state = readingStates[module]!;
-    if (error != null) {
-      readingStates[module] = state.copyWith(feedback: error);
-      notifyListeners();
-      return;
-    }
-
-    final normalizedAttempt = _normalizeText(attempt);
-    final normalizedPrompt = _normalizeText(state.prompt);
-    final isCorrect = normalizedAttempt == normalizedPrompt;
-    var nextPrompt = state.prompt;
-    if (isCorrect) {
-      final prompts = _readingPrompts[module]!;
-      final currentIndex = prompts.indexOf(state.prompt);
-      nextPrompt = prompts[(currentIndex + 1) % prompts.length];
-    }
-    readingStates[module] = state.copyWith(
-      prompt: nextPrompt,
-      progressCurrent: min(
-        state.progressCurrent + (isCorrect ? 1 : 0),
-        state.progressTotal,
-      ),
-      lastAttempt: attempt,
-      feedback: isCorrect
-          ? 'Nice speaking practice. Keep going.'
-          : 'Close. Try matching the prompt more exactly.',
-    );
-    if (isCorrect) {
-      learningPoints += 4;
-    }
-    _prepareRequest(
-      feature: 'reading_practice',
-      endpoint: '/api/reading/attempt',
-      method: RequestMethod.post,
-      payload: {
-        'module': module.name,
-        'prompt': state.prompt,
-        'attempt': attempt,
-        'isCorrect': isCorrect,
-      },
-    );
-    notifyListeners();
-  }
-
-  /// Validates chat input before it becomes a draft conversation message.
   String? validateChatMessage(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return 'Please type a short message first.';
@@ -742,17 +633,6 @@ class AudyController extends ChangeNotifier {
     return null;
   }
 
-  /// Validates spoken practice input before it updates progress.
-  String? validatePracticeInput(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) return 'Type what the learner said before submitting.';
-    if (trimmed.length > 80) {
-      return 'Keep the practice attempt under 80 characters.';
-    }
-    return null;
-  }
-
-  /// Adds a chat message locally, generates a friendly bot reply, and prepares a draft request.
   void submitSocialMessage(String message) {
     final error = validateChatMessage(message);
     if (error != null) {
@@ -794,7 +674,6 @@ class AudyController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Purchases an accessory locally if enough points exist and prepares a draft order payload.
   void unlockAccessory(String accessoryName) {
     final index = accessories.indexWhere((item) => item.name == accessoryName);
     if (index == -1) return;
@@ -865,10 +744,6 @@ class AudyController extends ChangeNotifier {
     );
   }
 
-  String _normalizeText(String value) {
-    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
-  }
-
   String _buildBotReply(String message) {
     final lower = message.toLowerCase();
     if (lower.contains('pizza')) {
@@ -898,28 +773,6 @@ class AudyController extends ChangeNotifier {
         icon: Icons.sentiment_dissatisfied_rounded,
       ),
     ];
-
-    _readingPrompts = {
-      ReadingModule.letters: ['A', 'B', 'C'],
-      ReadingModule.words: ['Dog', 'Apple', 'Book'],
-      ReadingModule.sentences: ['I love you', 'I am happy', 'Let us read'],
-    };
-
-    readingStates[ReadingModule.letters] = const ReadingPracticeState(
-      prompt: 'A',
-      progressCurrent: 1,
-      progressTotal: 3,
-    );
-    readingStates[ReadingModule.words] = const ReadingPracticeState(
-      prompt: 'Dog',
-      progressCurrent: 2,
-      progressTotal: 5,
-    );
-    readingStates[ReadingModule.sentences] = const ReadingPracticeState(
-      prompt: 'I love you',
-      progressCurrent: 1,
-      progressTotal: 3,
-    );
 
     _setupColorRound();
 

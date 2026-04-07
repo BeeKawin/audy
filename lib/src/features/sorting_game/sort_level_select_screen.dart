@@ -1,12 +1,15 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
 import 'sort_game_engine.dart';
 import 'sort_game_screen.dart';
 
-/// Level selection page with locked/unlocked progression.
-/// Shows all available levels with visual indicators for difficulty and progress.
+class _Responsive {
+  static const double maxWidth = 420.0;
+  static double sp(double width) => width.clamp(0.0, maxWidth);
+}
+
 class SortLevelSelectScreen extends StatefulWidget {
   const SortLevelSelectScreen({super.key});
 
@@ -32,67 +35,89 @@ class _SortLevelSelectScreenState extends State<SortLevelSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
     final levels = _engine.getLevels(unlockedLevelIndex: _unlockedLevelIndex);
 
     return Scaffold(
       backgroundColor: AudyColors.backgroundPrimary,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AudySpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: _Responsive.maxWidth),
+            child: Padding(
+              padding: EdgeInsets.all(effectiveWidth * 0.04),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context),
-                      borderRadius: BorderRadius.circular(
-                        AudySpacing.radiusMedium,
-                      ),
-                      child: SizedBox(
-                        width: AudySpacing.touchTargetMin,
-                        height: AudySpacing.touchTargetMin,
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          size: AudySpacing.iconMedium,
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: effectiveWidth * 0.02,
+                    runSpacing: effectiveWidth * 0.01,
+                    children: [
+                      InkWell(
+                        onTap: () => Navigator.pop(context),
+                        borderRadius: BorderRadius.circular(
+                          AudySpacing.radiusMedium,
+                        ),
+                        child: SizedBox(
+                          width: effectiveWidth * 0.12,
+                          height: effectiveWidth * 0.12,
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            size: AudySpacing.iconMedium,
+                          ),
                         ),
                       ),
+                      Icon(
+                        Icons.sort_rounded,
+                        size: (effectiveWidth * 0.08).clamp(24.0, 48.0),
+                        color: AudyColors.skyBlue,
+                      ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: effectiveWidth * 0.5,
+                        ),
+                        child: Text(
+                          'Sorting Game',
+                          style: AudyTypography.displayMedium,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: (screenHeight * 0.03).clamp(10.0, 30.0)),
+                  Center(
+                    child: Text(
+                      'Choose a level to play!',
+                      style: AudyTypography.bodyLarge,
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  const Icon(
-                    Icons.sort_rounded,
-                    size: AudySpacing.iconLarge,
-                    color: AudyColors.skyBlue,
+                  SizedBox(height: (screenHeight * 0.03).clamp(10.0, 30.0)),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: levels.length,
+                      separatorBuilder: (context, index) => SizedBox(
+                        height: (screenHeight * 0.015).clamp(5.0, 15.0),
+                      ),
+                      itemBuilder: (context, index) {
+                        final level = levels[index];
+                        return _LevelCard(
+                          level: level,
+                          onTap: level.isLocked
+                              ? null
+                              : () => _startLevel(level),
+                        );
+                      },
+                    ),
                   ),
-                  const SizedBox(width: AudySpacing.smallGap),
-                  Text('Sorting Game', style: AudyTypography.displayMedium),
                 ],
               ),
-              const SizedBox(height: AudySpacing.sectionGap),
-              Center(
-                child: Text(
-                  'Choose a level to play!',
-                  style: AudyTypography.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: AudySpacing.sectionGap),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: levels.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: AudySpacing.elementGap),
-                  itemBuilder: (context, index) {
-                    final level = levels[index];
-                    return _LevelCard(
-                      level: level,
-                      onTap: level.isLocked ? null : () => _startLevel(level),
-                    );
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -116,7 +141,6 @@ class _SortLevelSelectScreenState extends State<SortLevelSelectScreen> {
   }
 }
 
-/// Individual level card showing difficulty, theme, and lock status.
 class _LevelCard extends StatelessWidget {
   const _LevelCard({required this.level, required this.onTap});
 
@@ -125,6 +149,8 @@ class _LevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
     final theme = level.theme;
     final isLocked = level.isLocked;
 
@@ -133,7 +159,7 @@ class _LevelCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(AudySpacing.cardPadding),
+          padding: EdgeInsets.all(effectiveWidth * 0.05),
           decoration: BoxDecoration(
             color: AudyColors.backgroundCard,
             borderRadius: BorderRadius.circular(AudySpacing.radiusLarge),
@@ -145,56 +171,74 @@ class _LevelCard extends StatelessWidget {
             ),
             boxShadow: AudyShadows.cardShadow,
           ),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: effectiveWidth * 0.02,
+            runSpacing: effectiveWidth * 0.01,
             children: [
-              Container(
-                width: AudySpacing.iconXLarge,
-                height: AudySpacing.iconXLarge,
-                decoration: BoxDecoration(
-                  color: theme.primaryColor.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isLocked ? Icons.lock_rounded : theme.icon,
-                  size: AudySpacing.iconLarge,
-                  color: isLocked ? AudyColors.textLight : theme.primaryColor,
-                ),
-              ),
-              const SizedBox(width: AudySpacing.elementGap),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(level.name, style: AudyTypography.headingSmall),
-                    const SizedBox(height: 4),
-                    Row(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: effectiveWidth * 0.12,
+                    height: effectiveWidth * 0.12,
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isLocked ? Icons.lock_rounded : theme.icon,
+                      size: (effectiveWidth * 0.08).clamp(24.0, 48.0),
+                      color: isLocked
+                          ? AudyColors.textLight
+                          : theme.primaryColor,
+                    ),
+                  ),
+                  SizedBox(width: effectiveWidth * 0.03),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: effectiveWidth * 0.45,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _DifficultyBadge(difficulty: level.difficulty),
-                        const SizedBox(width: AudySpacing.smallGap),
                         Text(
-                          '${level.totalRounds} rounds',
-                          style: AudyTypography.bodySmall.copyWith(
-                            fontSize: 14,
-                          ),
+                          level.name,
+                          style: AudyTypography.headingSmall,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        SizedBox(height: effectiveWidth * 0.01),
+                        Wrap(
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: effectiveWidth * 0.02,
+                          runSpacing: effectiveWidth * 0.01,
+                          children: [
+                            _DifficultyBadge(difficulty: level.difficulty),
+                            Text(
+                              '${level.totalRounds} rounds',
+                              style: AudyTypography.bodySmall.copyWith(
+                                fontSize: (effectiveWidth * 0.035).clamp(
+                                  12.0,
+                                  16.0,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (isLocked) ...[
-                const Icon(
-                  Icons.lock_outline,
-                  color: AudyColors.textLight,
-                  size: AudySpacing.iconMedium,
-                ),
-              ] else ...[
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AudyColors.skyBlue,
-                  size: AudySpacing.iconMedium,
-                ),
-              ],
+              Icon(
+                isLocked ? Icons.lock_outline : Icons.arrow_forward_rounded,
+                color: isLocked ? AudyColors.textLight : AudyColors.skyBlue,
+                size: (effectiveWidth * 0.06).clamp(18.0, 36.0),
+              ),
             ],
           ),
         ),
@@ -203,7 +247,6 @@ class _LevelCard extends StatelessWidget {
   }
 }
 
-/// Small badge showing difficulty level.
 class _DifficultyBadge extends StatelessWidget {
   const _DifficultyBadge({required this.difficulty});
 
@@ -211,6 +254,8 @@ class _DifficultyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
     Color badgeColor;
     String label;
 
@@ -230,7 +275,10 @@ class _DifficultyBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: effectiveWidth * 0.025,
+        vertical: effectiveWidth * 0.01,
+      ),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
@@ -238,7 +286,7 @@ class _DifficultyBadge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: (effectiveWidth * 0.03).clamp(10.0, 14.0),
           fontWeight: FontWeight.w700,
           color: badgeColor,
         ),
@@ -246,4 +294,3 @@ class _DifficultyBadge extends StatelessWidget {
     );
   }
 }
-

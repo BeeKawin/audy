@@ -1,10 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
+import 'sort_game_widgets.dart';
 
-/// Result page showing performance summary after completing a sorting game session.
-/// Displays score, accuracy, time, attempts, and round breakdown.
+class _Responsive {
+  static const double maxWidth = 420.0;
+  static double sp(double width) => width.clamp(0.0, maxWidth);
+}
+
 class SortGameResultScreen extends StatelessWidget {
   const SortGameResultScreen({
     super.key,
@@ -32,124 +36,153 @@ class SortGameResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
+
     return Scaffold(
       backgroundColor: AudyColors.backgroundPrimary,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AudySpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: _Responsive.maxWidth),
+            child: Padding(
+              padding: EdgeInsets.all(effectiveWidth * 0.04),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: onDone,
-                      borderRadius: BorderRadius.circular(
-                        AudySpacing.radiusMedium,
-                      ),
-                      child: SizedBox(
-                        width: AudySpacing.touchTargetMin,
-                        height: AudySpacing.touchTargetMin,
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          size: AudySpacing.iconMedium,
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: onDone,
+                        borderRadius: BorderRadius.circular(
+                          AudySpacing.radiusMedium,
+                        ),
+                        child: SizedBox(
+                          width: effectiveWidth * 0.12,
+                          height: effectiveWidth * 0.12,
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            size: AudySpacing.iconMedium,
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AudySpacing.sectionGap),
-              Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.celebration_rounded,
-                      size: 80,
-                      color: theme.primaryColor,
-                    ),
-                    const SizedBox(height: AudySpacing.elementGap),
-                    Text('Wonderful!', style: AudyTypography.displayLarge),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$levelName Complete',
-                      style: AudyTypography.bodyLarge,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AudySpacing.sectionGap),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildStarsCard(),
-                      const SizedBox(height: AudySpacing.elementGap),
-                      _buildSummaryCard(),
-                      const SizedBox(height: AudySpacing.elementGap),
-                      _buildRoundBreakdownCard(),
-                      const SizedBox(height: AudySpacing.elementGap),
-                      _buildAdaptiveInsightCard(),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: AudySpacing.elementGap),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: onPlayAgain,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AudyColors.skyBlue,
-                        foregroundColor: AudyColors.textOnColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AudySpacing.radiusXLarge,
-                          ),
+                  SizedBox(height: (screenHeight * 0.03).clamp(10.0, 30.0)),
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.celebration_rounded,
+                          size: (screenHeight * 0.1).clamp(50.0, 80.0),
+                          color: theme.primaryColor,
                         ),
-                        elevation: 4,
-                      ),
-                      child: Text(
-                        'Play Again',
-                        style: AudyTypography.buttonText,
-                      ),
+                        SizedBox(
+                          height: (screenHeight * 0.015).clamp(5.0, 15.0),
+                        ),
+                        Text(
+                          'Wonderful!',
+                          style: AudyTypography.displayLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(
+                          height: (screenHeight * 0.005).clamp(2.0, 8.0),
+                        ),
+                        Text(
+                          '$levelName Complete',
+                          style: AudyTypography.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: AudySpacing.elementGap),
+                  SizedBox(height: (screenHeight * 0.03).clamp(10.0, 30.0)),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: onDone,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AudyColors.mintGreen,
-                        foregroundColor: AudyColors.textOnColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AudySpacing.radiusXLarge,
-                          ),
+                    child: ListView(
+                      children: [
+                        _buildStarsCard(effectiveWidth),
+                        SizedBox(
+                          height: (screenHeight * 0.015).clamp(5.0, 15.0),
                         ),
-                        elevation: 4,
-                      ),
-                      child: Text(
-                        'Done',
-                        style: AudyTypography.buttonText,
-                      ),
+                        _buildSummaryCard(effectiveWidth),
+                        SizedBox(
+                          height: (screenHeight * 0.015).clamp(5.0, 15.0),
+                        ),
+                        _buildRoundBreakdownCard(effectiveWidth),
+                        SizedBox(
+                          height: (screenHeight * 0.015).clamp(5.0, 15.0),
+                        ),
+                        _buildAdaptiveInsightCard(effectiveWidth),
+                      ],
                     ),
                   ),
+                  SizedBox(height: (screenHeight * 0.015).clamp(5.0, 15.0)),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: effectiveWidth * 0.03,
+                    runSpacing: effectiveWidth * 0.02,
+                    children: [
+                      SizedBox(
+                        width: effectiveWidth * 0.42,
+                        child: ElevatedButton(
+                          onPressed: onPlayAgain,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AudyColors.skyBlue,
+                            foregroundColor: AudyColors.textOnColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AudySpacing.radiusXLarge,
+                              ),
+                            ),
+                            elevation: 4,
+                            minimumSize: Size(
+                              double.infinity,
+                              (screenHeight * 0.07).clamp(50.0, 68.0),
+                            ),
+                          ),
+                          child: Text(
+                            'Play Again',
+                            style: AudyTypography.buttonText,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: effectiveWidth * 0.42,
+                        child: ElevatedButton(
+                          onPressed: onDone,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AudyColors.mintGreen,
+                            foregroundColor: AudyColors.textOnColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AudySpacing.radiusXLarge,
+                              ),
+                            ),
+                            elevation: 4,
+                            minimumSize: Size(
+                              double.infinity,
+                              (screenHeight * 0.07).clamp(50.0, 68.0),
+                            ),
+                          ),
+                          child: Text('Done', style: AudyTypography.buttonText),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: (screenHeight * 0.03).clamp(10.0, 30.0)),
                 ],
               ),
-              const SizedBox(height: AudySpacing.sectionGap),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStarsCard() {
+  Widget _buildStarsCard(double effectiveWidth) {
     return Container(
-      padding: const EdgeInsets.all(AudySpacing.cardPadding),
+      padding: EdgeInsets.all(effectiveWidth * 0.05),
       decoration: BoxDecoration(
         color: AudyColors.backgroundCard,
         borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
@@ -157,26 +190,31 @@ class SortGameResultScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('Your Score', style: AudyTypography.headingSmall),
-          const SizedBox(height: AudySpacing.elementGap),
+          Text(
+            'Your Score',
+            style: AudyTypography.headingSmall,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: effectiveWidth * 0.03),
           StarRewardDisplay(
             starsEarned: totalStarsEarned,
             maxStars: maxStars,
-            starSize: 56,
+            starSize: (effectiveWidth * 0.12).clamp(30.0, 56.0),
           ),
-          const SizedBox(height: AudySpacing.smallGap),
+          SizedBox(height: effectiveWidth * 0.02),
           Text(
             '$totalStarsEarned / $maxStars stars',
             style: AudyTypography.bodyMedium,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(double effectiveWidth) {
     return Container(
-      padding: const EdgeInsets.all(AudySpacing.cardPadding),
+      padding: EdgeInsets.all(effectiveWidth * 0.05),
       decoration: BoxDecoration(
         color: AudyColors.backgroundCard,
         borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
@@ -186,29 +224,29 @@ class SortGameResultScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Summary', style: AudyTypography.headingSmall),
-          const SizedBox(height: AudySpacing.elementGap),
+          SizedBox(height: effectiveWidth * 0.03),
           _SummaryRow(
             label: 'Accuracy',
             value: '$accuracyPercent%',
             color: accuracyPercent >= 80
                 ? AudyColors.mintGreen
                 : accuracyPercent >= 60
-                    ? AudyColors.skyBlue
-                    : AudyColors.warning,
+                ? AudyColors.skyBlue
+                : AudyColors.warning,
           ),
-          const SizedBox(height: AudySpacing.smallGap),
+          SizedBox(height: effectiveWidth * 0.015),
           _SummaryRow(
             label: 'Correct',
             value: '${sessionData.correctActions}',
             color: AudyColors.mintGreen,
           ),
-          const SizedBox(height: AudySpacing.smallGap),
+          SizedBox(height: effectiveWidth * 0.015),
           _SummaryRow(
             label: 'Try Again',
             value: '${sessionData.incorrectActions}',
             color: AudyColors.warning,
           ),
-          const SizedBox(height: AudySpacing.smallGap),
+          SizedBox(height: effectiveWidth * 0.015),
           _SummaryRow(
             label: 'Hints Used',
             value: '${sessionData.hintsUsed}',
@@ -219,9 +257,9 @@ class SortGameResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRoundBreakdownCard() {
+  Widget _buildRoundBreakdownCard(double effectiveWidth) {
     return Container(
-      padding: const EdgeInsets.all(AudySpacing.cardPadding),
+      padding: EdgeInsets.all(effectiveWidth * 0.05),
       decoration: BoxDecoration(
         color: AudyColors.backgroundCard,
         borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
@@ -231,7 +269,7 @@ class SortGameResultScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Round Breakdown', style: AudyTypography.headingSmall),
-          const SizedBox(height: AudySpacing.elementGap),
+          SizedBox(height: effectiveWidth * 0.03),
           ...sessionData.roundResults.map((round) {
             final roundAccuracy = round.correctCount + round.incorrectCount > 0
                 ? ((round.correctCount /
@@ -241,50 +279,54 @@ class SortGameResultScreen extends StatelessWidget {
                 : 0;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: AudySpacing.smallGap),
+              padding: EdgeInsets.only(bottom: effectiveWidth * 0.02),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    runAlignment: WrapAlignment.center,
+                    spacing: effectiveWidth * 0.02,
+                    runSpacing: effectiveWidth * 0.01,
                     children: [
-                      Expanded(
-                        child: Text(
-                          'Round ${round.roundIndex + 1}',
-                          style: AudyTypography.labelMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      Text(
+                        'Round ${round.roundIndex + 1}',
+                        style: AudyTypography.labelMedium,
                       ),
-                      const SizedBox(width: AudySpacing.smallGap),
-                      Flexible(
-                        child: Text(
-                          '${round.correctCount}/${round.correctCount + round.incorrectCount}',
-                          style: AudyTypography.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AudySpacing.smallGap),
-                      Flexible(
-                        child: Text(
-                          '$roundAccuracy%',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: roundAccuracy >= 80
-                                ? AudyColors.mintGreen
-                                : AudyColors.warning,
+                      Wrap(
+                        alignment: WrapAlignment.end,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: effectiveWidth * 0.02,
+                        runSpacing: effectiveWidth * 0.01,
+                        children: [
+                          Text(
+                            '${round.correctCount}/${round.correctCount + round.incorrectCount}',
+                            style: AudyTypography.bodyMedium,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          Text(
+                            '$roundAccuracy%',
+                            style: TextStyle(
+                              fontSize: (effectiveWidth * 0.04).clamp(
+                                12.0,
+                                16.0,
+                              ),
+                              fontWeight: FontWeight.w700,
+                              color: roundAccuracy >= 80
+                                  ? AudyColors.mintGreen
+                                  : AudyColors.warning,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: effectiveWidth * 0.01),
                   Wrap(
                     spacing: 2,
                     children: List.generate(3, (i) {
                       return Icon(
                         Icons.star_rounded,
-                        size: 20,
+                        size: (effectiveWidth * 0.05).clamp(14.0, 20.0),
                         color: i < round.starsEarned
                             ? AudyColors.starGold
                             : AudyColors.starSilver,
@@ -300,7 +342,7 @@ class SortGameResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAdaptiveInsightCard() {
+  Widget _buildAdaptiveInsightCard(double effectiveWidth) {
     String insight;
     IconData insightIcon;
     Color insightColor;
@@ -320,7 +362,7 @@ class SortGameResultScreen extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(AudySpacing.cardPadding),
+      padding: EdgeInsets.all(effectiveWidth * 0.05),
       decoration: BoxDecoration(
         color: insightColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AudySpacing.radiusXLarge),
@@ -329,15 +371,21 @@ class SortGameResultScreen extends StatelessWidget {
           width: 2,
         ),
       ),
-      child: Row(
+      child: Wrap(
+        alignment: WrapAlignment.start,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: effectiveWidth * 0.02,
         children: [
-          Icon(insightIcon, size: AudySpacing.iconMedium, color: insightColor),
-          const SizedBox(width: AudySpacing.smallGap),
-          Expanded(
+          Icon(
+            insightIcon,
+            size: (effectiveWidth * 0.08).clamp(24.0, 48.0),
+            color: insightColor,
+          ),
+          Flexible(
             child: Text(
               insight,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: (effectiveWidth * 0.04).clamp(14.0, 18.0),
                 fontWeight: FontWeight.w600,
                 color: insightColor,
               ),
@@ -362,14 +410,20 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = _Responsive.sp(screenWidth);
+
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      runAlignment: WrapAlignment.center,
+      spacing: effectiveWidth * 0.02,
+      runSpacing: effectiveWidth * 0.01,
       children: [
         Text(label, style: AudyTypography.bodyMedium),
-        const Spacer(),
         Text(
           value,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: (effectiveWidth * 0.045).clamp(14.0, 18.0),
             fontWeight: FontWeight.w700,
             color: color,
           ),
