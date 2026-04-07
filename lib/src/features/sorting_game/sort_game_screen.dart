@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
@@ -69,11 +69,11 @@ class _SortGameScreenState extends State<SortGameScreen> {
                         Column(
                           children: [
                             Expanded(
-                              flex: _engine.remainingItems.length > 5 ? 3 : 2,
+                              flex: 3,
                               child: _buildItemsGrid(),
                             ),
                             const SizedBox(height: AudySpacing.elementGap),
-                            Expanded(flex: 1, child: _buildCategoriesGrid()),
+                            Expanded(flex: 1, child: FittedBox(fit: BoxFit.contain, child: _buildCategoriesGrid())),
                           ],
                         ),
                         if (_engine.showingFeedback)
@@ -352,3 +352,4 @@ class _SortGameScreenState extends State<SortGameScreen> {
     );
   }
 }
+

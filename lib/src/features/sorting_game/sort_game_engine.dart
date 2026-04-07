@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -120,14 +120,13 @@ class SortGameEngine extends ChangeNotifier {
   /// Calculate stars for current round based on accuracy.
   int get currentRoundStars {
     if (_currentRoundActions.isEmpty) return 0;
-    final accuracy = _totalCorrectForRound / _currentRoundActions.length;
+    final totalActions = _currentRoundActions.length;
+    final correctActions = _currentRoundActions.where((a) => a.isCorrect).length;
+    final accuracy = correctActions / totalActions;
     if (accuracy >= 0.9) return 3;
     if (accuracy >= 0.6) return 2;
     return 1;
   }
-
-  int get _totalCorrectForRound =>
-      _currentRoundActions.where((a) => a.isCorrect).length;
 
   /// Get all level definitions.
   List<SortGameLevel> getLevels({int unlockedLevelIndex = 0}) {
@@ -161,33 +160,29 @@ class SortGameEngine extends ChangeNotifier {
   /// Handle a sort attempt (ABA feedback loop).
   /// [itemId] is the item being sorted, [selectedCategoryId] is the chosen category.
   void handleSortAttempt(String itemId, String selectedCategoryId) {
-    if (_showingFeedback || _sessionComplete || _roundComplete) return;
-    if (_remainingItems.isEmpty) return;
+    if (_showingFeedback) return;
 
-    final item = _remainingItems.where((i) => i.id == itemId).firstOrNull;
-    if (item == null) return;
+    final item = _remainingItems.firstWhere((i) => i.id == itemId);
+    final isCorrect = selectedCategoryId == item.categoryId;
+    final responseTime = DateTime.now()
+        .difference(_roundStartTime ?? DateTime.now())
+        .inMilliseconds;
 
-    final isCorrect = item.categoryId == selectedCategoryId;
-    final startTime = _roundStartTime;
-    final responseTime = startTime != null
-        ? DateTime.now().difference(startTime).inMilliseconds
-        : 0;
-
-    _recentPerformance.add(isCorrect);
+    _isCorrect = isCorrect;
+    _showingFeedback = true;
+    _feedbackMessage = isCorrect
+        ? ABAGameFeedback.getPositiveMessage()
+        : ABAGameFeedback.getCorrectionMessage();
+    _hintItemId = isCorrect ? null : itemId;
 
     if (isCorrect) {
-      _isCorrect = true;
-      _totalCorrect++;
-      _feedbackMessage = ABAGameFeedback.getPositiveMessage();
       _remainingItems.removeWhere((i) => i.id == itemId);
+      _totalCorrect++;
+      _recentPerformance.add(true);
     } else {
-      _isCorrect = false;
       _totalIncorrect++;
-      _feedbackMessage = ABAGameFeedback.getCorrectionMessage();
-      _hintItemId = item.id;
+      _recentPerformance.add(false);
     }
-
-    _showingFeedback = true;
 
     final action = SortActionRecord(
       itemId: itemId,
@@ -233,11 +228,14 @@ class SortGameEngine extends ChangeNotifier {
     final stars = currentRoundStars;
     _totalStars += stars;
 
+    final totalActions = _currentRoundActions.length;
+    final correctActions = _currentRoundActions.where((a) => a.isCorrect).length;
+
     final roundResult = SortRoundResult(
       roundIndex: _currentRoundIndex,
       actions: List.from(_currentRoundActions),
-      correctCount: _totalCorrectForRound,
-      incorrectCount: _currentRoundActions.length - _totalCorrectForRound,
+      correctCount: correctActions,
+      incorrectCount: totalActions - correctActions,
       roundTimeMs: roundTime,
       starsEarned: stars,
     );
@@ -282,7 +280,7 @@ class SortGameEngine extends ChangeNotifier {
     final allActions = _allRoundResults.expand((r) => r.actions).toList();
     final avgResponseTime = allActions.isEmpty
         ? 0
-        : allActions.map((a) => a.responseTimeMs).reduce((a, b) => a + b) ~/
+        : allActions.map((a) => a.responseTimeMs).reduce((a, b) => a + b) ~/ 
               allActions.length;
 
     return SortGameSessionData(
@@ -308,10 +306,12 @@ class SortGameEngine extends ChangeNotifier {
   /// Returns a suggested difficulty adjustment based on recent performance.
   /// This is designed to be extended with full AI adaptivity later.
   AdaptiveSuggestion getSuggestion() {
-    if (_recentPerformance.length < 3) return AdaptiveSuggestion.maintain;
+    if (_recentPerformance.isEmpty) return AdaptiveSuggestion.maintain;
 
-    final recent = _recentPerformance.takeLast(5);
-    final accuracy = recent.where((r) => r).length / recent.length;
+    final recent = _recentPerformance.length <= 5
+        ? _recentPerformance
+        : _recentPerformance.sublist(_recentPerformance.length - 5);
+    final accuracy = recent.where((r) => r).length / recent.length.toDouble();
 
     if (accuracy >= 0.9) return AdaptiveSuggestion.increase;
     if (accuracy < 0.5) return AdaptiveSuggestion.decrease;
@@ -343,10 +343,3 @@ class SortGameEngine extends ChangeNotifier {
 
 /// Suggestion for adaptive difficulty adjustment.
 enum AdaptiveSuggestion { increase, maintain, decrease }
-
-extension _ListExt<T> on List<T> {
-  List<T> takeLast(int n) {
-    if (length <= n) return this;
-    return sublist(length - n);
-  }
-}

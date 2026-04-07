@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
@@ -108,7 +108,7 @@ class _SortLevelSelectScreenState extends State<SortLevelSelectScreen> {
         final starsEarned = result['stars'] as int? ?? 0;
         if (starsEarned >= level.starsRequired) {
           setState(() {
-            _unlockedLevelIndex = (_unlockedLevelIndex + 1).clamp(0, 5).toInt();
+            _unlockedLevelIndex = _unlockedLevelIndex + 1;
           });
         }
       }
@@ -246,3 +246,4 @@ class _DifficultyBadge extends StatelessWidget {
     );
   }
 }
+

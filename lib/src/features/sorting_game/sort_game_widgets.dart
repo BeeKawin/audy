@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
@@ -95,22 +95,27 @@ class _SortItemCardState extends State<SortItemCard>
           child: LayoutBuilder(
             builder: (context, constraints) {
               final availableWidth = constraints.maxWidth;
-              final iconSize = (availableWidth * 0.45).clamp(30.0, 70.0);
+              final availableHeight = constraints.maxHeight;
+              final iconSize = (availableWidth * 0.4).clamp(28.0, 60.0);
+              final maxIconSize = (availableHeight - 30).clamp(28.0, 60.0);
+              final finalIconSize = iconSize < maxIconSize ? iconSize : maxIconSize;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: iconSize,
-                    height: iconSize,
-                    decoration: BoxDecoration(
-                      color: cardColor.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      widget.item.icon,
-                      size: iconSize * 0.55,
-                      color: cardColor,
+                  SizedBox(
+                    width: finalIconSize,
+                    height: finalIconSize,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: cardColor.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        widget.item.icon,
+                        size: finalIconSize * 0.55,
+                        color: cardColor,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -118,7 +123,7 @@ class _SortItemCardState extends State<SortItemCard>
                     child: Text(
                       widget.item.label,
                       textAlign: TextAlign.center,
-                      style: AudyTypography.labelMedium.copyWith(fontSize: 13),
+                      style: AudyTypography.labelMedium.copyWith(fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -168,7 +173,7 @@ class SortCategoryTarget extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: catColor.withValues(alpha: 0.4),
-                    blurRadius: 20,
+                    blurRadius: 16,
                     spreadRadius: 2,
                   ),
                 ]
@@ -177,22 +182,27 @@ class SortCategoryTarget extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final availableWidth = constraints.maxWidth;
+            final availableHeight = constraints.maxHeight;
             final iconSize = (availableWidth * 0.4).clamp(28.0, 60.0);
+            final maxIconSize = (availableHeight - 40).clamp(28.0, 60.0);
+            final finalIconSize = iconSize < maxIconSize ? iconSize : maxIconSize;
             return Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: iconSize,
-                  height: iconSize,
-                  decoration: BoxDecoration(
-                    color: catColor.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    category.icon,
-                    size: iconSize * 0.55,
-                    color: catColor,
+                SizedBox(
+                  width: finalIconSize,
+                  height: finalIconSize,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: catColor.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      category.icon,
+                      size: finalIconSize * 0.55,
+                      color: catColor,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -200,7 +210,7 @@ class SortCategoryTarget extends StatelessWidget {
                   child: Text(
                     category.label,
                     textAlign: TextAlign.center,
-                    style: AudyTypography.labelMedium.copyWith(fontSize: 13),
+                    style: AudyTypography.labelMedium.copyWith(fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

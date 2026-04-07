@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/audy_theme.dart';
 import 'sorting_game_models.dart';
@@ -131,7 +131,10 @@ class SortGameResultScreen extends StatelessWidget {
                         ),
                         elevation: 4,
                       ),
-                      child: Text('Done', style: AudyTypography.buttonText),
+                      child: Text(
+                        'Done',
+                        style: AudyTypography.buttonText,
+                      ),
                     ),
                   ),
                 ],
@@ -154,24 +157,17 @@ class SortGameResultScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Wrap(
-            alignment: WrapAlignment.center,
-            runAlignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(maxStars, (index) {
-              final filled = index < totalStarsEarned;
-              return Icon(
-                Icons.star_rounded,
-                size: 40,
-                color: filled ? AudyColors.starGold : AudyColors.starSilver,
-              );
-            }),
+          Text('Your Score', style: AudyTypography.headingSmall),
+          const SizedBox(height: AudySpacing.elementGap),
+          StarRewardDisplay(
+            starsEarned: totalStarsEarned,
+            maxStars: maxStars,
+            starSize: 56,
           ),
           const SizedBox(height: AudySpacing.smallGap),
           Text(
-            '$totalStarsEarned / $maxStars Stars',
-            style: AudyTypography.headingMedium,
+            '$totalStarsEarned / $maxStars stars',
+            style: AudyTypography.bodyMedium,
           ),
         ],
       ),
@@ -179,10 +175,6 @@ class SortGameResultScreen extends StatelessWidget {
   }
 
   Widget _buildSummaryCard() {
-    final sessionDuration = sessionData.sessionEndedAt
-        .difference(sessionData.sessionStartedAt)
-        .inSeconds;
-
     return Container(
       padding: const EdgeInsets.all(AudySpacing.cardPadding),
       decoration: BoxDecoration(
@@ -193,14 +185,16 @@ class SortGameResultScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Performance Summary', style: AudyTypography.headingSmall),
+          Text('Summary', style: AudyTypography.headingSmall),
           const SizedBox(height: AudySpacing.elementGap),
           _SummaryRow(
             label: 'Accuracy',
             value: '$accuracyPercent%',
             color: accuracyPercent >= 80
                 ? AudyColors.mintGreen
-                : AudyColors.warning,
+                : accuracyPercent >= 60
+                    ? AudyColors.skyBlue
+                    : AudyColors.warning,
           ),
           const SizedBox(height: AudySpacing.smallGap),
           _SummaryRow(
@@ -210,30 +204,16 @@ class SortGameResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: AudySpacing.smallGap),
           _SummaryRow(
-            label: 'Incorrect',
+            label: 'Try Again',
             value: '${sessionData.incorrectActions}',
-            color: AudyColors.error,
+            color: AudyColors.warning,
           ),
           const SizedBox(height: AudySpacing.smallGap),
           _SummaryRow(
-            label: 'Time',
-            value: '${sessionDuration}s',
-            color: AudyColors.skyBlue,
+            label: 'Hints Used',
+            value: '${sessionData.hintsUsed}',
+            color: AudyColors.warning,
           ),
-          const SizedBox(height: AudySpacing.smallGap),
-          _SummaryRow(
-            label: 'Avg Response',
-            value: '${sessionData.averageResponseTimeMs}ms',
-            color: AudyColors.softLavender,
-          ),
-          if (sessionData.hintsUsed > 0) ...[
-            const SizedBox(height: AudySpacing.smallGap),
-            _SummaryRow(
-              label: 'Hints Used',
-              value: '${sessionData.hintsUsed}',
-              color: AudyColors.warning,
-            ),
-          ],
         ],
       ),
     );
@@ -275,19 +255,25 @@ class SortGameResultScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AudySpacing.smallGap),
-                      Text(
-                        '${round.correctCount}/${round.correctCount + round.incorrectCount}',
-                        style: AudyTypography.bodyMedium,
+                      Flexible(
+                        child: Text(
+                          '${round.correctCount}/${round.correctCount + round.incorrectCount}',
+                          style: AudyTypography.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(width: AudySpacing.smallGap),
-                      Text(
-                        '$roundAccuracy%',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: roundAccuracy >= 80
-                              ? AudyColors.mintGreen
-                              : AudyColors.warning,
+                      Flexible(
+                        child: Text(
+                          '$roundAccuracy%',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: roundAccuracy >= 80
+                                ? AudyColors.mintGreen
+                                : AudyColors.warning,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -351,7 +337,7 @@ class SortGameResultScreen extends StatelessWidget {
             child: Text(
               insight,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: insightColor,
               ),
